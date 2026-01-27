@@ -16,7 +16,7 @@
 
 ## 1. Problem Statement
 
-Currently, faculty members schedule quizzes independently, often leading to "evaluation clusters" where students face multiple high-stakes assessments on a single day. This lack of cross-departmental visibility causes significant student burnout and suboptimal academic performance. There is no centralized system to visualize student workload before a quiz is finalized.
+Currently, faculty members schedule quizzes independently, often leading to "evaluation clusters" and clashing quiz timings for students enrolled in multiple courses across departments, where students face multiple high-stakes assessments on a single day. This lack of cross-departmental visibility causes significant student burnout and suboptimal academic performance. There is no centralized system to visualize student workload before a quiz is finalized.
 
 ## 2. Stakeholders & Users
 
@@ -46,6 +46,14 @@ Currently, faculty members schedule quizzes independently, often leading to "eva
 - Device & Connectivity: Has a Laptop and a smartphone with good internet access.
 - Pain Point: Finding out about a "surprise" or newly scheduled quiz only 48 hours in advance. Also has to coordinate with professors about quiz clashes.
 
+### Persona 3: Academic Admin – System Manager
+- Role/Context: Manages student enrollment and course data
+- Background: Works with institutional systems (ERP/LMS)
+- Goals: Maintain accurate, secure enrollment data and Control access to sensitive information
+- Tech Comfort: High
+- Device & Connectivity: Desktop system; secure network
+- Pain Point: Preventing unauthorized access or data misuse
+
 
 ## 4. Core User Scenarios
 
@@ -68,7 +76,7 @@ Why this matters: It prevents the professor from unintentionally causing a stude
 ### Scenario 2: Student viewing upcoming quizzes
 
 - When: At the start of the week
-- Who: Aarav (Student)
+- Who: Ram (Student)
 - Goal: Understand upcoming academic workload
 
 Steps:
@@ -96,7 +104,17 @@ Why this matters: Ensures accuracy and data privacy across the system.
 
 ## 5. Functional Requirements (User Stories)
 
-### Story 1 (High): Dashboard Visualization
+### Story 1 (High): Instructor Authentication
+
+Instructors can securely log into the app.
+
+Acceptance Criteria:
+
+- [ ] Given valid credentials, when the instructor logs in, then access is granted
+
+- [ ] Given invalid credentials, when logging in, then access is denied
+
+### Story 2 (High): Dashboard Visualization
 
 As a professor, I want to see a calendar view of my students' existing quizzes so that I can identify free slots.
 
@@ -104,28 +122,28 @@ Acceptance Criteria:
 
 - [ ] Given a selected student section, when I view the calendar, then I should see color-coded indicators of quiz density per day.
 
-### Story 2 (High): Quiz Creation
+### Story 3 (High): Quiz Creation
 As a professor, I want to input quiz details (Date, Time, Duration, Venue) to the system.
 
 Acceptance Criteria:
 
 - [ ] Given valid details, when I click 'Submit', then the event is saved and visible to all associated students and faculty.
 
-### Story 3 (Med): Conflict Alert
+### Story 4 (Med): Conflict Alert
 As a professor, I want the system to warn me if I try to schedule a quiz on a day that already has 2+ evaluations.
 
 Acceptance Criteria:
 
 - [ ] Given a date with 2 existing evals, when I attempt to save a 3rd, then a warning pop-up appears.
 
-### Story 4 (High): Student Personal Timeline
+### Story 5 (High): Student Personal Timeline
 As a student, I want to see an aggregated list of quizzes only for the courses I am registered in.
 
 Acceptance Criteria:
 
 - [ ] Given a student login, when they open the app, then they see a chronological list of their specific upcoming quizzes.
 
-### Story 5 (Low): Export to Calendar
+### Story 6 (Low): Export to Calendar
 As a user, I want to sync these quizzes to my Google/Outlook calendar.
 
 Acceptance Criteria:
@@ -152,3 +170,5 @@ Acceptance Criteria:
 3. Proctoring: No features for online exam monitoring.
 
 4. Venue Booking: The app shows the venue but does not handle the physical booking/locking of classrooms.
+
+5. Direct student communication or messaging
