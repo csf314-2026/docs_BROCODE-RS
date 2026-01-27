@@ -49,49 +49,76 @@ Currently, faculty members schedule quizzes independently, often leading to "eva
 
 ## 4. Core User Scenarios
 
-### Scenario 1: (a 'day in the life' picture to build shared understanding)
+### Scenario 1: Scheduling a Quiz 
 
-- When: _context/location/situation_
-- Who: _one of the personas_
-- Goal: _a specific real-world objective_
+- When: Two weeks before the intended quiz date, in the professor's office.
+- Who: Prof Arun
+- Goal: Select a Tuesday slot that doesn't overlap with already scheduled quizes of other CDCs and electives.
 
 Steps:  
 
-1. _specific UI interactions_
-2.
-3.
-
+1. logs in and selects "Create New Quiz."
+2. selects her course "CS F301" and the specific student section.
+3. he app displays a Calendar Heatmap. Tuesday the 10th is "Red" (2 quizzes already scheduled). Wednesday the 11th is "Green" (0 quizzes).
+4. selects Wednesday, enters the time (4:00 PM), and hits "Publish."
 (Add more if required.)
 
-Why this matters: _real world reasons_
+Why this matters: It prevents the professor from unintentionally causing a student "meltdown" and reduces the need for rescheduling later.
 
-**_Add more scenarios if required_**
 
 ## 5. Functional Requirements (User Stories)
 
-### Story 1 (High|Med|Low): Title
+### Story 1 (High): Dashboard Visualization
 
-_One line description._
+As a professor, I want to see a calendar view of my students' existing quizzes so that I can identify free slots.
 
 Acceptance Criteria:  
 
-- [ ] Given - when - then
-- [ ] Given - when - then
-- [ ] Given - when - then
-- [ ] ...
+- [ ] Given a selected student section, when I view the calendar, then I should see color-coded indicators of quiz density per day.
 
-**Add more stories; 10-15 expected. Could be more.**
+### Story 2 (High): Quiz Creation
+As a professor, I want to input quiz details (Date, Time, Duration, Venue) to the system.
+
+Acceptance Criteria:
+
+- [ ] Given valid details, when I click 'Submit', then the event is saved and visible to all associated students and faculty.
+
+### Story 3 (Med): Conflict Alert
+As a professor, I want the system to warn me if I try to schedule a quiz on a day that already has 2+ evaluations.
+
+Acceptance Criteria:
+
+- [ ] Given a date with 2 existing evals, when I attempt to save a 3rd, then a warning pop-up appears.
+
+### Story 4 (High): Student Personal Timeline
+As a student, I want to see an aggregated list of quizzes only for the courses I am registered in.
+
+Acceptance Criteria:
+
+- [ ] Given a student login, when they open the app, then they see a chronological list of their specific upcoming quizzes.
+
+### Story 5 (Low): Export to Calendar
+As a user, I want to sync these quizzes to my Google/Outlook calendar.
+
+Acceptance Criteria:
+
+- [ ] Given a quiz entry, when I click 'Sync', then an .ics file is generated or a direct API sync is triggered.
 
 ## 6. Non‑Functional Requirements
 
 | Attribute      | Requirement | Rationale |
 |----------------|-------------|-----------|
-| Performance    |             |           |
-| Reliability    |             |           |
-| Security       |             |           |
-| Accessibility  |             |           |
-| ...            |             |           |
+| Performance    |      Calendar should load in < 2 seconds.       |     Professors will stop using it if it's slow during meetings.      |
+| Reliability    |      99.9% uptime during mid-term and end-term weeks.      |     Critical periods where scheduling is most frequent.      |
+| Security       |      Only authenticated faculty can edit/add quizzes.       |     Prevent unauthorized changes or "prank" quiz entries.      |
+| Accessibility  |      Must follow WCAG 2.1 color contrast standards.       |      Essential for students/faculty with color blindness (especially for heatmaps).     |
 
 ## 7. Out of Scope
 
-_What your app will NOT do._
+1. Grading/LMS: The app will not host quiz questions or store grades.
+
+2. Attendance: No tracking of student attendance during the quiz.
+
+3. Proctoring: No features for online exam monitoring.
+
+4. Venue Booking: The app shows the venue but does not handle the physical booking/locking of classrooms.
