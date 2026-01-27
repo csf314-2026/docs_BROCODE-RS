@@ -65,6 +65,34 @@ Steps:
 
 Why this matters: It prevents the professor from unintentionally causing a student "meltdown" and reduces the need for rescheduling later.
 
+### Scenario 2: Student viewing upcoming quizzes
+
+- When: At the start of the week
+- Who: Aarav (Student)
+- Goal: Understand upcoming academic workload
+
+Steps:
+
+1. Student logs in
+2. Views a consolidated list/calendar of quizzes
+3. Identifies busy days
+
+Why this matters: Helps students plan study time and reduce anxiety.
+
+### Scenario 3: Admin importing enrollment data
+
+- When: At the beginning of a semester
+- Who: Academic Admin
+- Goal: Ensure correct course-student mappings
+
+Steps:
+
+1. Admin uploads enrollment data
+2. System validates and stores the data securely
+3. App updates access and visibility accordingly
+
+Why this matters: Ensures accuracy and data privacy across the system.
+
 
 ## 5. Functional Requirements (User Stories)
 
@@ -109,9 +137,11 @@ Acceptance Criteria:
 | Attribute      | Requirement | Rationale |
 |----------------|-------------|-----------|
 | Performance    |      Calendar should load in < 2 seconds.       |     Professors will stop using it if it's slow during meetings.      |
-| Reliability    |      99.9% uptime during mid-term and end-term weeks.      |     Critical periods where scheduling is most frequent.      |
+| Reliability    |      99 % uptime during mid-term and end-term weeks.      |     Critical periods where scheduling is most frequent.      |
 | Security       |      Only authenticated faculty can edit/add quizzes.       |     Prevent unauthorized changes or "prank" quiz entries.      |
-| Accessibility  |      Must follow WCAG 2.1 color contrast standards.       |      Essential for students/faculty with color blindness (especially for heatmaps).     |
+| Accessibility  |      Mobile-friendly UI       |      Faculty on the move     |
+|Scalability| Support multiple departments |	Future expansion |
+| Usability |	Minimal steps for key tasks |	Busy faculty users |
 
 ## 7. Out of Scope
 
