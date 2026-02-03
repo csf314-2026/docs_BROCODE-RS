@@ -65,10 +65,10 @@ Currently, faculty members schedule quizzes independently, often leading to "eva
 
 Steps:  
 
-1. logs in and selects "Create New Quiz."
-2. selects her course "CS F301" and the specific student section.
-3. he app displays a Calendar Heatmap. Tuesday the 10th is "Red" (2 quizzes already scheduled). Wednesday the 11th is "Green" (0 quizzes).
-4. selects Wednesday, enters the time (4:00 PM), and hits "Publish."
+1. Logs in and selects "Create New Quiz."
+2. Selects his course "CS F301" and the specific student section.
+3. The app displays a Calendar Heatmap. Tuesday the 10th is "Red" (2 quizzes already scheduled). Wednesday the 11th is "Green" (0 quizzes).
+4. Selects Wednesday, enters the time (4:00 PM), and hits "Publish."
 (Add more if required.)
 
 Why this matters: It prevents the professor from unintentionally causing a student "meltdown" and reduces the need for rescheduling later.
@@ -81,9 +81,9 @@ Why this matters: It prevents the professor from unintentionally causing a stude
 
 Steps:
 
-1. Student logs in
-2. Views a consolidated list/calendar of quizzes
-3. Identifies busy days
+1. Student logs in.
+2. Views a consolidated list/calendar of quizzes.
+3. Identifies busy days.
 
 Why this matters: Helps students plan study time and reduce anxiety.
 
@@ -95,9 +95,9 @@ Why this matters: Helps students plan study time and reduce anxiety.
 
 Steps:
 
-1. Admin uploads enrollment data
-2. System validates and stores the data securely
-3. App updates access and visibility accordingly
+1. Admin uploads enrollment data.
+2. System validates and stores the data securely.
+3. App updates access and visibility accordingly.
 
 Why this matters: Ensures accuracy and data privacy across the system.
 
