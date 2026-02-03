@@ -106,13 +106,17 @@ Why this matters: Ensures accuracy and data privacy across the system.
 
 ### Story 1 (High): Instructor Authentication
 
-Instructors can securely log into the app.
+Instructors can securely log into the app using their institutional Google accounts to access their personalized dashboard.
 
 Acceptance Criteria:
 
-- [ ] Given valid credentials, when the instructor logs in, then access is granted
+- [ ] Given the login page, when the instructor clicks "Sign in with Google" and provides valid @bits-goa.ac.in (or relevant domain) credentials, then the system authenticates the user and redirects them to the Faculty Home Page.
 
-- [ ] Given invalid credentials, when logging in, then access is denied
+- [ ] Given a successful login, when the Home Page loads, then the instructor sees a dashboard populated with only the courses they are currently assigned to teach.
+
+- [ ] Given a user attempts to log in with a non-institutional or invalid Google account, when authentication is processed, then the system denies access and displays an "Unauthorized Domain" error message.
+
+- [ ] Given an active session, when the instructor selects "Logout," then the session is terminated and the user is redirected back to the public landing page.
 
 ### Story 2 (High): Dashboard Visualization
 
