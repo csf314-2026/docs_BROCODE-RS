@@ -215,3 +215,31 @@ Acceptance Criteria:
 4. Venue Booking: The app shows the venue but does not handle the physical booking/locking of classrooms.
 
 5. Direct student communication or messaging
+
+## 8. High‑Level Architecture
+The Quiz Scheduler will utilize a Flutter frontend to deliver a dual-experience: a responsive Web Dashboard for faculty (eliminating the need for downloads) and a Native Mobile App for students to leverage push notifications. The backend will follow a serverless or microservices pattern to ensure scalability during peak enrollment periods.
+
+- **Frontend:** Flutter (Web & Mobile) for a unified codebase.
+- **Backend:** Node.js (Express) or Firebase Cloud Functions to handle business logic and scheduling calculations.
+- **Database:** PostgreSQL or Cloud Firestore to manage relational data between students, courses, and quiz timestamps.
+- **Notifications:** Firebase Cloud Messaging (FCM) for real-time alerts and automated cron-job reminders.
+- **Auth:** Google OAuth 2.0 / Firebase Auth integrated with University SSO for secure, domain-restricted access.
+
+
+## 9. Success Metrics
+
+By the end of the course:
+
+- [ ] Faculty Autonomy: faculty users can successfully log in, create a quiz, and reschedule it via the Web UI without manual database intervention..
+- [ ] Visual Conflict Resolution: The "Heatmap" correctly identifies and displays high-density evaluation days based on real student enrollment data.
+- [ ] Notification Reliability: Students receive automated "Next-Day" reminders and "New Quiz" alerts with a latency of less than 5 minutes from the time of scheduling.
+- [ ] Secure Access: Successful implementation of SSO/JWT-based authentication that restricts data visibility so students only see quizzes for their registered courses.
+
+### 10. Glossary
+
+| Term              | Definition                                                                  |
+|-------------------|-----------------------------------------------------------------------------|
+| Evaluation Cluster        | A period where multiple assessments overlap, causing high student stress. |
+| Heatmap           | A visual calendar interface where colors (Green to Red) indicate the density of quizzes scheduled for a specific group of students.              |
+| SSO       | Single Sign-On; a session/user authentication service that permits a user to use one set of login credentials (e.g., University Email).            |
+| Push Notification | A message that pops up on a mobile device. In this app, these are triggered via Firebase Cloud Messaging (FCM) to alert students of new quizzes or upcoming deadlines even when the app is not actively open.            |
