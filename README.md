@@ -161,7 +161,7 @@ As a student, I want to receive an immediate notification when a new quiz is sch
 
 Acceptance Criteria:
 
-- [ ] Given a professor publishes a new quiz, when the transaction is finalized, then all students registered in that course section receive a push notification or email.
+- [ ] Given a professor publishes a new quiz, when the transaction is finalized, then all students registered in that course section receive a push notification.
 - [ ] Given the notification is clicked, when the app opens, then it navigates directly to that specific quiz's details.
 
 
