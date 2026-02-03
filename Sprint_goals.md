@@ -1,29 +1,85 @@
-# Sprint Goals: Quiz Scheduler
+# Sprint Goals – Quiz Scheduler
 
-## Current Sprint: Sprint 1 (Weeks 1–2)
-
-### **Sprint Goal**
-> **"Professors can securely log in and visualize student evaluation density on a calendar so they can identify conflict-free dates for new quizzes."**
-
-### **Definition of Done (Testable Outcomes)**
-To consider this sprint successful, the following must be verifiable by the stakeholder:
-* **Authentication:** A user can log in using a `@bits-goa.ac.in` Google account and is redirected to a personalized dashboard.
-* **Persistence:** A user remains logged into the app/web interface after closing and reopening the browser/application.
-* **Heatmap Visualization:** A professor can view a calendar where dates are color-coded (Green/Yellow/Red) based on the number of existing quizzes for a specific student group.
-* **Data Integrity:** The heatmap correctly reflects a mock dataset of at least 5 overlapping course schedules.
+**Project:** Quiz Scheduler (BITS Goa)  
+**Total Timeline:** 8 weeks  
 
 ---
 
-## Future Sprint Roadmap
+## Sprint 1 (Weeks 1–2)
 
-### **Sprint 2 (Weeks 3–4): Core Action**
-**Goal:** "Professors can publish and edit quiz schedules so that students see an up-to-date personal timeline of their upcoming assessments."
-* *Focus:* Enabling the "Write" side of the database and the student-facing dashboard.
+**Theme:** Access & Heatmap Visualization
 
-### **Sprint 3 (Weeks 5–6): Communication & Alerts**
-**Goal:** "Students receive automated mobile notifications and 24-hour reminders so they never miss a newly scheduled or upcoming quiz."
-* *Focus:* Integrating Firebase Cloud Messaging (FCM) and background cron jobs for reminders.
+| Goal # | User Story |
+| ------ | ---------- |
+| 1 | Professors can securely log in via university SSO and view a student workload heatmap so they can identify dates without evaluation clusters before scheduling. |
 
-### **Sprint 4 (Weeks 7–8): Integration & Coordination**
-**Goal:** "Users can sync quiz schedules to external calendars and track modification histories so they stay coordinated across all planning tools."
-* *Focus:* Exporting .ics files, Google Calendar API integration, and the "Change Log" feature.
+**Definition of Done:**
+
+- Professors can sign in using @bits-goa.ac.in Google accounts  
+- Authentication state persists across app restarts (SSO Persistence)  
+- The dashboard displays a color-coded Calendar Heatmap (Green/Yellow/Red)  
+- Heatmap accurately reflects student density from a provided enrollment dataset  
+
+---
+
+## Sprint 2 (Weeks 3–4)
+
+**Theme:** Quiz Management & Timelines
+
+| Goal # | User Story |
+| ------ | ---------- |
+| 1 | Professors can publish and modify quiz details while students view their specific course timelines so that the academic schedule remains accurate and transparent. |
+
+**Definition of Done:**
+
+- Faculty can input and "Publish" quiz details (Date, Time, Venue)  
+- Conflict alerts trigger a warning if a professor selects a date with 2+ existing quizzes  
+- Students can log in and see a chronological list of quizzes only for their registered courses  
+- Professors can edit existing quizzes, triggering a "Modified" status on the entry  
+
+---
+
+## Sprint 3 (Weeks 5–6)
+
+**Theme:** Real-time Notifications
+
+| Goal # | User Story |
+| ------ | ---------- |
+| 1 | Students receive push notifications for new quizzes and daily preparation reminders so they never miss a deadline or a sudden change in schedule. |
+
+**Definition of Done:**
+
+- Push notifications are delivered to student devices immediately upon quiz publication  
+- Automated "Next-Day" summary notifications are sent at 8:00 PM daily  
+- Clicking a notification navigates the user directly to the relevant quiz details  
+- Notifications accurately reflect if a quiz was rescheduled (showing old vs. new time)  
+
+---
+
+## Sprint 4 (Weeks 7–8)
+
+**Theme:** External Sync & History Logs
+
+| Goal # | User Story |
+| ------ | ---------- |
+| 1 | Users can sync quizzes to personal calendars and view modification histories so they stay coordinated across platforms and understand why schedules changed. |
+
+**Definition of Done:**
+
+- Users can export quiz events to Google/Outlook calendars via .ics or direct sync  
+- A "Change Log" is visible to students, highlighting exactly what was edited (e.g., Venue change)  
+- Final UI/UX polish for both Web (Faculty) and Mobile (Student) platforms  
+- All success metrics (e.g., login speed, heatmap accuracy) are verified by the Stakeholder  
+
+---
+
+## Summary
+
+| Sprint | Weeks | Theme | Primary User Value |
+| ------ | ----- | ----- | ------------------ |
+| 1 | 1–2 | Access & Heatmap | Professors identify free slots visually |
+| 2 | 3–4 | Quiz Management | Quizzes are formally scheduled and visible to students |
+| 3 | 5–6 | Notifications | Students get proactive alerts and reminders |
+| 4 | 7–8 | Sync & History | Unified planning across external calendar tools |
+
+---
