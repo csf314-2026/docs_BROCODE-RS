@@ -226,6 +226,22 @@ The Quiz Scheduler will utilize a Flutter frontend to deliver a dual-experience:
 - **Auth:** Google OAuth 2.0 / Firebase Auth integrated with University SSO for secure, domain-restricted access.
 
 
+```mermaid
+graph TD
+    A[Flutter App <br/><hr>Web & Mobile]
+    B[Node.js API Server]
+    C[Database <br/><hr>Quizzes, Courses, Enrollments]
+    D[FCM / Push Notification Service]
+    E[SSO / Google Auth]
+    A <-->|HTTPS / REST API| B
+    B <--> C
+    B --> D
+    A <--> E
+    B <--> E
+
+```
+
+
 ## 9. Success Metrics
 
 By the end of the course:
