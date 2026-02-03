@@ -136,14 +136,53 @@ Acceptance Criteria:
 
 - [ ] Given a date with 2 existing evals, when I attempt to save a 3rd, then a warning pop-up appears.
 
-### Story 5 (High): Student Personal Timeline
+### Story 5 (High): Secure Student Login
+As a student, I want to log in using my university email ID so that I can access my personalized schedule securely.
+
+Acceptance Criteria:
+
+- [ ] Given the login page, when the user clicks "Continue with Google," then they are redirected to the Google OAuth 2.0 interface.
+- [ ] Given a successful Google login, when the email domain matches @bits-goa.ac.in (or similar), then the user is granted access to their specific dashboard.
+- [ ] Given a first-time login, when the account is verified, then the system automatically creates a profile linked to that Google ID.
+
+### Story 6 (High): Student Personal Timeline
 As a student, I want to see an aggregated list of quizzes only for the courses I am registered in.
 
 Acceptance Criteria:
 
 - [ ] Given a student login, when they open the app, then they see a chronological list of their specific upcoming quizzes.
 
-### Story 6 (Low): Export to Calendar
+### Story 7 (High): Real-time Notification for New Quizzes
+As a student, I want to receive an immediate notification when a new quiz is scheduled for one of my courses.
+
+Acceptance Criteria:
+
+- [ ] Given a professor publishes a new quiz, when the transaction is finalized, then all students registered in that course section receive a push notification or email.
+- [ ] Given the notification is clicked, when the app opens, then it navigates directly to that specific quiz's details.
+
+
+### Story 8 (High): Next-Day Evaluation Reminders
+As a student, I want to receive a summary notification of the quizzes I have the next day so I can finalize my preparation.
+Acceptance Criteria:
+
+- [ ] Given the current time is 8:00 PM, when the system checks for quizzes occurring the following day, then it sends a "Daily Summary" notification to the student.
+- [ ] Given the notification is clicked, when the app opens, then it navigates directly to that specific quiz's details.
+- [ ] Given no quizzes are scheduled for the next day, when the system checks, then no notification is sent.
+
+### Story 9 (High): : Quiz Rescheduling & Detail Modification
+As a professor, I want to edit the details of a scheduled quiz (date, time, or description) so that I can accommodate changes in the academic schedule.
+
+- [ ] Given an existing quiz entry, when the organizing professor selects "Edit," then all fields (Date, Time, and Description) become modifiable.
+- [ ] Given a change in Date or Time, when the professor saves the update, then the Student Burden Heatmap is automatically recalculated for the new and old dates.
+- [ ] Given any change to the quiz details, when the professor clicks "Update," then the system must automatically trigger a "Revision Alert" to all enrolled students.
+
+### Story 10 (High): : Change Log & History
+As a student, I want to see what specific details were changed in a rescheduled quiz so that I don't get confused by the update.
+
+- [ ] Given a modified quiz, when a student views the quiz details, then the app highlights the changed fields (e.g., the old time is struck through and the new time is shown in red).
+- [ ] Given a major reschedule (change of date), when the notification is sent, then the message body explicitly states: "Date changed from [Old Date] to [New Date]."
+
+### Story 11 (Low): Export to Calendar
 As a user, I want to sync these quizzes to my Google/Outlook calendar.
 
 Acceptance Criteria:
