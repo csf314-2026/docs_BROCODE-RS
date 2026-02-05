@@ -101,6 +101,19 @@ Steps:
 
 Why this matters: Ensures accuracy and data privacy across the system.
 
+### Scenario 4: Importing Student Enrollment Data
+- When: During the first week of the semester, after the registration/add-drop period concludes.
+- Who: Prof Arun (Professor)
+- Goal: Quickly populate the app with the list of students officially registered for "EEE F211" to ensure they receive notifications and contribute to the heatmap.
+
+Steps:
+1. Extract: Prof Arun logs into the University ERP (Quanta) and downloads the student registration list for his course as a CSV file.
+2. Access: He logs into the Quiz Scheduler web dashboard and selects his course, "EEE F211."
+3. Upload: He navigates to the "Manage Students" tab and clicks on "Import from ERP/CSV."
+4. Validate: The system displays a preview of the names and @bits-goa.ac.in emails found in the file. Prof Arun confirms everything looks correct and hits "Confirm Import."
+5. Sync: The app creates user profiles (if they don't exist) and links them to the course.
+Why this matters: It ensures that the "evaluation density" calculations are based on the actual students in the class. Without this step, the heatmap wouldn't know which students are in which courses, rendering the conflict-detection logic useless.
+
 
 ## 5. Functional Requirements (User Stories)
 
@@ -192,6 +205,27 @@ As a user, I want to sync these quizzes to my Google/Outlook calendar.
 Acceptance Criteria:
 
 - [ ] Given a quiz entry, when I click 'Sync', then an .ics file is generated or a direct API sync is triggered.
+
+### Story 12 (High): Bulk Student Enrollment (Faculty & Admin)
+As a Professor or Admin, I want to upload a CSV/Excel export from Quanta (ERP) so that students are automatically enrolled in the correct course sections.
+
+Acceptance Criteria:
+- [ ] Given the "Manage Students" page, when the user uploads a valid CSV file, then the system parses the email IDs and maps them to the selected course.
+
+- [ ] Given an invalid file format or missing data, when the upload is attempted, then the system displays a clear error message (e.g., "Invalid File: Column 'Student Email' missing").
+
+- [ ] Given an existing enrollment list, when a new file is uploaded, then the system merges the lists without creating duplicate entries.
+
+### Story 13 (High): Proxy Quiz Scheduling (Admin/Moderator)
+As a Moderator, I want to schedule a quiz for a course I am not personally teaching so that the student heatmap remains accurate even if the instructor doesn't use the app.
+
+Acceptance Criteria:
+
+- [ ] Given an Admin/Moderator login, when they navigate to "Global Schedule," then they can select any department and any course listed in the system.
+
+- [ ] Given a course selection, when the Admin enters quiz details, then the quiz is published and assigned to that course instructor's dashboard as "Scheduled by Admin."
+
+- [ ] Given a proxy-scheduled quiz, when the actual course instructor logs in, then they have the authority to edit or confirm the details.
 
 ## 6. Non‑Functional Requirements
 
