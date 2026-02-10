@@ -20,7 +20,7 @@ graph TD
     Sys -- Send Alerts --> Notification[Push/Email Service]
 ```    
 
-**What it shows:** (The Quiz Scheduler system as a central hub interacting with three primary users (Faculty, Students, Admins) and the external University ERP (Quanta) for student enrollment data.)>
+**What it shows:** The Quiz Scheduler system as a central hub interacting with three primary users (Faculty, Students, Admins) and the external University ERP (Quanta) for student enrollment data.
 
 ### LEVEL 2: CONTAINER DIAGRAM (Architect View)
 
