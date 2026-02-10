@@ -100,11 +100,14 @@ What must the app do?
 ### Team Capability
 
 🛠️ **Skills & Growth Mindset:**
-* **Adaptability:** The team consists of solid learners committed to mastering the required tech stack (Flutter, Node.js, Firebase) during the implementation phase.
-* **Core Strengths:** Strong foundational knowledge in logic and system design, with specific leads assigned to research and prototype each layer of the stack.
-* **Continuous Learning:** Weekly knowledge-sharing sessions are planned to bridge
+- Foundational Knowledge: All team members are familiar with SQL and OOP concepts, providing a strong baseline for database management and software design.
 
-✅ Choose:Flutter & Firebase as the core stack.
+- Core Literacy: Every member is proficient in at least one programming language, ensuring versatility in both backend and frontend tasks.
+
+- Adaptive Learning: The team is committed to learning the specific project tech stack (Flutter, Node.js, Firebase) on an "as-needed" basis during implementation.
+
+-✅ Choose: Flutter & Firebase. While new to the team, these tools align with the team's OOP background and offer a highly learnable ecosystem for rapid prototyping.
+
 
 ### Budget & Infrastructure
 
@@ -113,3 +116,14 @@ What must the app do?
 - Hosting/DB: Utilizing Firebase Spark Plan (Free Tier).
 - Infrastructure: Serverless approach reduces maintenance overhead.
 
+### Market Maturity & Support
+
+- Flutter: Backed by Google with a massive ecosystem of plugins (like syncfusion_flutter_calendar) that accelerate development for our specific scheduling needs.
+- Node.js: The gold standard for server-side JavaScript with extensive libraries for CSV parsing and secure authentication.
+- ✅ Choose: Industry-standard tools ensure that whenever the team hits a "roadblock," a solution is likely available on Stack Overflow or official documentation.
+
+### Migration & Technical Debt
+
+- Data Portability: By using a Node.js middleware for the Heatmap Engine rather than putting logic inside Firebase, we can easily migrate the backend to AWS or a private BITS server in the future.
+- Modular Design: Using a clean folder structure ensures that new features (like Venue Booking) can be added later without rewriting the core scheduling logic.
+- ✅ Choose: We are prioritizing "Clean Code" principles and documentation early to minimize the debt we might otherwise accrue during the fast-paced 8-week build.
