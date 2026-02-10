@@ -1,9 +1,10 @@
+
 # Tech Stack
 
-**Team Name:** Quiz Scheduler – Group 0
+**Team Name:** BROCODE-RS
 **Sprint:** Sprint 1
-**Date:** 12 Feb 2026
-**GitHub Repo:** `https://github.com/csf314-2026/docs_BROCODE-RS`
+**Date:** 10 Feb 2026
+**GitHub Repo:** [https://github.com/csf314-2026/docs_BROCODE-RS](https://github.com/csf314-2026/docs_BROCODE-RS)
 
 ---
 
@@ -17,7 +18,7 @@
 graph TB
   subgraph faculty["Faculty"]
     F1[-Person-]
-    F2[Logs in securely<br/>views workload heatmap]
+    F2[Secure login &<br/>workload heatmap view]
   end
 
   subgraph system["Quiz Scheduler System"]
@@ -34,7 +35,7 @@ graph TB
 ```
 
 **What it shows:**
-Faculty members use the Quiz Scheduler platform to securely log in and visualize student workload density before scheduling evaluations. Authentication is handled by the university SSO system.
+Faculty members securely access the Quiz Scheduler platform to visualize student workload density before scheduling evaluations. Authentication is handled using the university-provided SSO system.
 
 ---
 
@@ -67,7 +68,7 @@ graph LR
 ```
 
 **What it shows:**
-The Flutter app communicates with a Node.js backend over HTTPS. The backend authenticates faculty using University SSO and retrieves workload data from PostgreSQL to power the calendar heatmap.
+The Flutter application communicates with a Node.js backend over HTTPS. The backend authenticates faculty via University SSO and retrieves enrollment data from PostgreSQL to generate the workload heatmap.
 
 ---
 
@@ -110,13 +111,13 @@ graph TD
 ```
 
 **What it shows:**
-The Flutter app handles faculty authentication and displays a calendar heatmap. The backend computes workload density from enrollment data and returns color-coded results to the app.
+The Flutter app manages faculty authentication and displays a color-coded calendar heatmap. The backend computes workload density using enrollment data stored in PostgreSQL and serves this data via REST APIs.
 
 ---
 
 ## LEVEL 4: CODE (Optional)
 
-Skipped for now. Code-level diagrams are not required at this stage.
+Skipped. Code-level diagrams are not required at this stage.
 
 ---
 
@@ -130,29 +131,29 @@ Skipped for now. Code-level diagrams are not required at this stage.
 * Persist authentication state across app restarts
 * Display a **color-coded calendar heatmap** (Green / Yellow / Red)
 * Visualize student workload density using a provided enrollment dataset
-* Help faculty identify **low-conflict dates** before scheduling quizzes
+* Enable faculty to identify **low-conflict dates** before scheduling quizzes
 
-❌ **Eliminates (Sprint 1):**
+❌ **Explicitly excluded in Sprint 1:**
 
 * Student login or dashboards
-* Quiz creation, publishing, or editing
-* Notifications or reminders
+* Quiz creation, editing, or publishing
+* Push notifications or reminders
 * Advanced analytics or reporting
 
 ---
 
 ## Non-Functional Requirements
 
-* **Usability:** Simple, glanceable UI for faculty decision-making
+* **Usability:** Simple, glanceable UI for quick decision-making
 * **Performance:** Heatmap loads within 1 second
 * **Security:** Access restricted to authenticated faculty only
-* **Maintainability:** Clean architecture suitable for student teams
+* **Maintainability:** Modular architecture suitable for a student team
 
 ❌ **Eliminates:**
 
-* Microservices architecture (overkill)
-* Native Android + iOS apps separately
-* Complex real-time systems
+* Microservices architecture
+* Separate native Android and iOS apps
+* Real-time or streaming systems
 
 ---
 
@@ -160,14 +161,14 @@ Skipped for now. Code-level diagrams are not required at this stage.
 
 🛠️ **Skills available:**
 
-* Programming: JavaScript, Python, basic Flutter
-* Backend: Node.js and REST APIs
+* Programming: JavaScript, Python, introductory Flutter
+* Backend: Node.js with REST APIs
 * Databases: SQL fundamentals
 * Mobile development aligned with course objectives
 
 ✅ **Chosen Stack:**
 
-* **Frontend:** Flutter (single codebase, course-aligned)
+* **Frontend:** Flutter (single cross-platform codebase)
 * **Backend:** Node.js + Express
 * **Database:** PostgreSQL
 * **Authentication:** University SSO (OAuth-based)
@@ -176,25 +177,26 @@ Skipped for now. Code-level diagrams are not required at this stage.
 
 ## Budget & Infrastructure
 
-💰 **Estimated yearly cost:**
+💰 **Estimated yearly cost: ₹0**
 
-* Backend hosting (Render / Railway / DigitalOcean): ₹0–1000
-* PostgreSQL (Free tier / self-hosted): ₹0
-* University SSO: Free
-* Development tools (GitHub, Flutter SDK): Free
+* **Backend hosting:** Free-tier platforms (Render / Railway)
+* **Database:** PostgreSQL free tier or self-hosted
+* **Authentication:** University-provided SSO
+* **Development tools:** GitHub, Flutter SDK, VS Code
 
-➡️ **Total:** ~₹0–₹12,000 per year
-✔️ Feasible for a university project
+➡️ **Total Cost:** **₹0 per year**
+✔️ Entire system operates within free-tier and institute-provided resources
+✔️ No paid services required for any sprint
 
 ---
 
 ## Market Maturity & Support
 
-* **Flutter:** Backed by Google, strong ecosystem
+* **Flutter:** Backed by Google with a strong developer ecosystem
 * **Node.js:** Industry-standard backend runtime
-* **PostgreSQL:** Mature, open-source, highly reliable
+* **PostgreSQL:** Mature, reliable, open-source database
 
-➡️ All technologies are stable, well-supported, and widely adopted.
+➡️ All selected technologies are stable, well-supported, and widely used.
 
 ---
 
@@ -202,14 +204,11 @@ Skipped for now. Code-level diagrams are not required at this stage.
 
 **Planned evolution beyond Sprint 1:**
 
-* Sprint 2: Student login and quiz publishing
-* Sprint 2/3: Enhanced heatmap using live quiz data
-* Sprint 3: Push notifications and reminders
-* Sprint 4: Calendar sync and audit logs
+* **Sprint 2:** Student login and quiz publishing
+* **Sprint 2–3:** Heatmap enhancement using live quiz data
+* **Sprint 3:** Push notifications and reminders
+* **Sprint 4:** Calendar sync and audit logs
 
-Architecture is intentionally simple in Sprint 1 to minimize technical debt while enabling smooth feature expansion.
+The architecture is intentionally kept simple in Sprint 1 to minimize technical debt while allowing smooth feature expansion in later sprints.
 
 ---
-
-
-
