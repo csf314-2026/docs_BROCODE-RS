@@ -1,129 +1,369 @@
-# Tech stack
+# Tech Stack
 
-**Team Name:** BROCODE-RS 
-**Sprint:** Sprint 1  
-**Date:** 10/02/2026  
-**GitHub Repo:** [[Github](https://github.com/csf314-2026/docs_BROCODE-RS.git)]
+**Team Name:** BROCODE-RS
+**Sprint:** Sprint 1
+**Date:** 10/02/2026
+**GitHub Repo:** [Github](https://github.com/csf314-2026/docs_BROCODE-RS.git)
 
-## C4 Model
+---
 
-### LEVEL 1: CONTEXT DIAGRAM (CEO/Stakeholder View)
+# C4 Model
 
-**Audience:** Non-technical people.
+---
+
+## LEVEL 1: CONTEXT DIAGRAM (CEO / Stakeholder View)
+
+**Audience:** Non-technical stakeholders
+**Focus:** Who uses the system and what external systems it depends on.
 
 ```mermaid
 graph TD
-    User_Student[Student] -- View Timelines --> Sys[Quiz Scheduler]
-    User_Faculty[Faculty] -- Schedule Quizzes & Import Students --> Sys
-    User_Admin[System Moderator] -- Proxy Schedule & Data Management --> Sys
-    Sys -- Fetch Data --> ERP[University ERP/Quanta]
-    Sys -- Send Alerts --> Notification[Push/Email Service]
-```    
+    Student[Student] -- View Timeline & Receive Alerts --> System[Quiz Scheduler System]
+    Faculty[Faculty] -- Schedule Quizzes & Import Students --> System
+    Admin[System Moderator] -- Proxy Scheduling & Manage Data --> System
+    
+    System -- Store & Retrieve Data --> Firestore[(Cloud Firestore)]
+    System -- Authentication --> FirebaseAuth[Firebase Auth]
+    System -- Send Notifications --> NotificationService[Push / Email Service]
+```
 
-**What it shows:** The Quiz Scheduler system as a central hub interacting with three primary users (Faculty, Students, Admins) and the external University ERP (Quanta) for student enrollment data.
+### What it shows
 
-### LEVEL 2: CONTAINER DIAGRAM (Architect View)
+The **Quiz Scheduler System** acts as the central coordination layer:
 
-**Audience:** Architects/Dev Leads. **Major deployable units.**
+* **Students** view their personalized quiz timelines and receive alerts.
+* **Faculty** create and manage quizzes and import student data.
+* **Admins** oversee scheduling and perform proxy operations when required.
+* The system depends on:
+
+  * **Cloud Firestore** for persistent storage.
+  * **Firebase Auth** for secure authentication and domain restriction.
+  * **Push/Email services** for notifications.
+
+This view avoids technical complexity and communicates value clearly to stakeholders.
+
+---
+
+## LEVEL 2: CONTAINER DIAGRAM (Architect View)
+
+**Audience:** Architects / Dev Leads
+**Focus:** Major deployable units and how they interact.
+
 ```mermaid
 graph TB
+
     subgraph "Quiz Scheduler System"
-        Web[Flutter Web: Faculty Dashboard]
-        App[Flutter Mobile: Student App]
-        API[Node.js Server: Business Logic & Heatmap Engine]
-        DB[(Cloud Firestore: Database)]
-        Auth[Firebase Auth: SSO]
+
+        Web[Flutter Web Application<br/>Faculty + Admin Dashboard]
+        Mobile[Flutter Mobile App<br/>Student Application]
+        API[Node.js Backend Service<br/>Business Logic + Heatmap Engine]
+        DB[(Cloud Firestore Database)]
+        Auth[Firebase Authentication]
+        Notify[Notification Service]
+
     end
 
-    User_Faculty --> Web
-    User_Student --> App
-    User_Admin --> Web
-    Web & App <-->|HTTPS/JSON| API
+    Faculty --> Web
+    Admin --> Web
+    Student --> Mobile
+
+    Web <-->|HTTPS / JSON| API
+    Mobile <-->|HTTPS / JSON| API
+
     API <--> DB
     API <--> Auth
-```    
+    API <--> Notify
+```
 
-**What it shows:** The high-level technical building blocks, separating the user-facing Flutter applications from the data management and logic layers.
+### What it shows
 
-### LEVEL 3: COMPONENT DIAGRAM (Developer View)
+The system is separated into clear deployable containers:
 
-**Audience:** Developers. **Modules/services inside each container.**
+### 1️⃣ Flutter Web
+
+* Used by Faculty and Admin.
+* Provides scheduling dashboard and heatmap visualization.
+
+### 2️⃣ Flutter Mobile
+
+* Used by Students.
+* Displays timeline and sends push notifications.
+
+### 3️⃣ Node.js Backend
+
+* Central business logic.
+* Handles scheduling, validation, heatmap generation, and imports.
+* Ensures consistent API response structure.
+
+### 4️⃣ Firebase Services
+
+* **Firestore** → NoSQL cloud database.
+* **Firebase Auth** → Secure SSO + domain restriction.
+* **Notification Service** → Push/email alerts.
+
+This separation ensures scalability and clean architectural boundaries.
+
+---
+
+## LEVEL 3: COMPONENT DIAGRAM (Developer View)
+
+**Audience:** Developers
+**Focus:** Internal modules inside each container.
+
+---
+
+### 🔹 Node.js Backend – Internal Components
 
 ```mermaid
 graph TD
-    subgraph "Node.js API Container"
-        CSV[CSV Parser: ERP Importer]
-        HME[Heatmap Engine: Density Calculator]
-        AG[Auth Guard: SSO Domain Validator]
-        ND[Notification Dispatcher: FCM Logic]
-    end
 
-    subgraph "Flutter App Container"
-        UI[UI Components]
-        SM[State Management: Provider/Riverpod]
-        LS[Local Storage: Token Persistence]
-    end
+subgraph "Node.js Backend"
 
-    UI --> SM
-    SM --> LS
-    CSV --> DB
-    HME --> DB
-```    
-**What it shows:** The internal breakdown of logic, such as the CSV parser for student imports and the heatmap engine for conflict detection.
+    %% Entry Layer
+    Server[Express App Server]
+    Router[Route Layer]
+    AuthMiddleware[Authentication Middleware<br/>JWT + Domain Validation]
 
-<!-- ### Level 4: Code (Optional, Implementation Teams)
+    %% Controllers
+    QuizController[Quiz Controller]
+    HeatmapController[Heatmap Controller]
+    ImportController[CSV Import Controller]
+    UserController[User Controller]
+    NotificationController[Notification Controller]
 
-**Audience:** Specific dev teams. **Classes/package structure.** (Skip for now.) -->
+    %% Services
+    QuizService[Quiz Service<br/>CRUD Operations]
+    HeatmapService[Heatmap Service<br/>Aggregation Logic]
+    ImportService[Import Service<br/>Bulk Student Processing]
+    UserService[User Service]
+    NotificationService[Notification Service]
 
-## Tech Stack Selection Criteria
+    %% Core Logic Engines
+    ConflictEngine[Conflict Detection Engine]
+    DensityEngine[Density Calculation Engine]
+    TimeSlotNormalizer[Time Slot Normalizer]
+    CSVParser[CSV Parser]
+    DataValidator[Schema Validator]
 
-### Functional Requirements
+    %% Data Layer
+    FirestoreAdapter[Firestore Adapter Layer]
+    TransactionManager[Transaction Manager]
 
-What must the app do?
+    %% Cross-Cutting Concerns
+    Logger[Central Logger]
+    ErrorHandler[Global Error Handler]
+    ApiResponse[Standard API Response Envelope]
 
-- Heatmap Logic: Requires a server-side logic layer to aggregate student schedules across departments to find "Evaluation Clusters."
+end
 
-- Cross-Platform Access: Faculty require a no-install Web Dashboard; Students require a native-feel mobile app for notifications.
+Server --> Router
+Router --> AuthMiddleware
 
-❌ Eliminates: Plain HTML/JS (Too complex for cross-platform), SQL-only DBs (Fixed schemas make rapid student data changes difficult).
+AuthMiddleware --> QuizController
+AuthMiddleware --> HeatmapController
+AuthMiddleware --> ImportController
+AuthMiddleware --> UserController
+AuthMiddleware --> NotificationController
 
-### Non-Functional Requirements
+QuizController --> QuizService
+HeatmapController --> HeatmapService
+ImportController --> ImportService
+UserController --> UserService
+NotificationController --> NotificationService
 
-- Persistence: Must keep students logged in via Refresh Tokens.
+HeatmapService --> ConflictEngine
+HeatmapService --> DensityEngine
+HeatmapService --> TimeSlotNormalizer
 
-- Reliability: 99% uptime during peak mid-term weeks.
+ImportService --> CSVParser
+ImportService --> DataValidator
 
-- Security: Strict @bits-goa.ac.in domain restriction for all users.
+QuizService --> FirestoreAdapter
+HeatmapService --> FirestoreAdapter
+ImportService --> FirestoreAdapter
+UserService --> FirestoreAdapter
+NotificationService --> FirestoreAdapter
 
-❌  Eliminates: Guest-access auth (Too high a security risk for academic data).
+FirestoreAdapter --> TransactionManager
 
-### Team Capability
+QuizController --> ApiResponse
+HeatmapController --> ApiResponse
+ImportController --> ApiResponse
 
-🛠️ **Skills & Growth Mindset:**
-- Foundational Knowledge: All team members are familiar with SQL and OOP concepts, providing a strong baseline for database management and software design.
+Server --> Logger
+Server --> ErrorHandler
+```
 
-- Core Literacy: Every member is proficient in at least one programming language, ensuring versatility in both backend and frontend tasks.
+---
 
-- Adaptive Learning: The team is committed to learning the specific project tech stack (Flutter, Node.js, Firebase) on an "as-needed" basis during implementation.
+### 🔹 Flutter Application – Internal Components
 
--✅ Choose: Flutter & Firebase. While new to the team, these tools align with the team's OOP background and offer a highly learnable ecosystem for rapid prototyping.
+```mermaid
+graph TD
 
+subgraph "Flutter Application (Web + Mobile)"
 
-### Budget & Infrastructure
+    %% Presentation Layer
+    LoginScreen[Login Screen]
+    FacultyDashboard[Faculty Dashboard Screen]
+    StudentTimeline[Student Timeline Screen]
+    HeatmapScreen[Heatmap Screen]
 
-💰 Cost for year: ₹0
+    %% UI Components
+    CalendarWidget[Calendar Widget]
+    HeatmapWidget[Heatmap Visualization Widget]
+    QuizCard[Quiz Card Component]
+    NotificationBanner[Notification Banner]
 
-- Hosting/DB: Utilizing Firebase Spark Plan (Free Tier).
-- Infrastructure: Serverless approach reduces maintenance overhead.
+    %% State Management
+    AppState[Global State<br/>Riverpod / Provider]
+    AuthState[Authentication State]
+    QuizState[Quiz State]
+    HeatmapState[Heatmap State]
 
-### Market Maturity & Support
+    %% Services
+    APIClient[API Client Service<br/>HTTPS + JSON]
+    AuthService[Firebase Auth Service]
+    TokenManager[Access + Refresh Token Manager]
+    NotificationClient[Push Notification Client]
 
-- Flutter: Backed by Google with a massive ecosystem of plugins (like syncfusion_flutter_calendar) that accelerate development for our specific scheduling needs.
-- Node.js: The gold standard for server-side JavaScript with extensive libraries for CSV parsing and secure authentication.
-- ✅ Choose: Industry-standard tools ensure that whenever the team hits a "roadblock," a solution is likely available on Stack Overflow or official documentation.
+    %% Local Persistence
+    LocalStorage[SharedPreferences]
+    LocalCache[Offline Cache Layer]
 
-### Migration & Technical Debt
+    %% Navigation
+    AppRouter[Flutter Navigator / GoRouter]
 
-- Data Portability: By using a Node.js middleware for the Heatmap Engine rather than putting logic inside Firebase, we can easily migrate the backend to AWS or a private BITS server in the future.
-- Modular Design: Using a clean folder structure ensures that new features (like Venue Booking) can be added later without rewriting the core scheduling logic.
-- ✅ Choose: We are prioritizing "Clean Code" principles and documentation early to minimize the debt we might otherwise accrue during the fast-paced 8-week build.
+end
+
+LoginScreen --> AuthState
+FacultyDashboard --> QuizState
+StudentTimeline --> QuizState
+HeatmapScreen --> HeatmapState
+
+FacultyDashboard --> CalendarWidget
+HeatmapScreen --> HeatmapWidget
+StudentTimeline --> QuizCard
+
+AppState --> AuthState
+AppState --> QuizState
+AppState --> HeatmapState
+
+QuizState --> APIClient
+HeatmapState --> APIClient
+AuthState --> AuthService
+
+AuthService --> TokenManager
+TokenManager --> LocalStorage
+
+APIClient --> TokenManager
+NotificationClient --> LocalCache
+
+LoginScreen --> AppRouter
+FacultyDashboard --> AppRouter
+StudentTimeline --> AppRouter
+HeatmapScreen --> AppRouter
+```
+
+---
+
+### What This Level 3 Shows
+
+* Clear **layered backend architecture**
+
+  * Router → Middleware → Controllers → Services → Engines → Firestore
+* Dedicated **Heatmap computation engines**
+* Explicit **validation + response envelope**
+* Centralized **logging and error handling**
+* Clean Flutter separation:
+
+  * UI Layer
+  * State Layer
+  * Service Layer
+  * Persistence Layer
+  * Navigation Layer
+* Prepared for:
+
+  * Offline caching
+  * Token refresh
+  * Future scalability
+  * Feature expansion (venue booking, analytics, reports)
+
+---
+
+# Tech Stack Selection Criteria
+
+---
+
+## Functional Requirements
+
+The system must:
+
+* Allow faculty to schedule quizzes.
+* Import student data via CSV.
+* Generate evaluation heatmaps using aggregated data.
+* Provide students with personalized timelines.
+* Send notifications for upcoming quizzes.
+
+❌ Eliminated:
+
+* Static HTML-only systems.
+* Backend-less client-side aggregation.
+* SQL-only rigid schema systems.
+
+---
+
+## Non-Functional Requirements
+
+* Persistent login with refresh tokens.
+* 99% uptime during peak exam weeks.
+* Strict `@bits-goa.ac.in` domain restriction.
+* Secure data isolation between departments.
+
+❌ Eliminated:
+
+* Guest login systems.
+* Fully on-device scheduling logic.
+
+---
+
+## Team Capability
+
+* Strong foundation in OOP & SQL.
+* Familiarity with JavaScript ecosystem.
+* Willingness to learn Flutter & Firebase.
+
+✅ Selected:
+
+* **Frontend:** Flutter (Web + Mobile)
+* **Backend:** Node.js (Express)
+* **Database:** Cloud Firestore
+* **Auth:** Firebase Authentication
+
+---
+
+## Budget & Infrastructure
+
+💰 Estimated Cost: ₹0 (Spark Plan)
+
+* Serverless Firebase infrastructure.
+* Minimal DevOps overhead.
+* Scalable architecture without upfront hosting cost.
+
+---
+
+## Market Maturity & Support
+
+* **Flutter:** Mature cross-platform framework with strong plugin ecosystem.
+* **Node.js:** Large ecosystem for REST APIs, CSV parsing, authentication.
+* **Firebase:** Reliable cloud-managed backend services.
+
+---
+
+## Migration & Technical Debt Strategy
+
+* Business logic isolated in Node.js (not embedded in Firestore).
+* Clean service-based backend design.
+* Modular Flutter architecture.
+* Easily migratable to AWS or private BITS infrastructure if needed.
+
