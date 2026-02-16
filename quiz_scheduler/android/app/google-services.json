@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "699022731941",
+    "project_id": "quiz-scheduler-3a295",
+    "storage_bucket": "quiz-scheduler-3a295.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699022731941:android:ca6f32a98699fc958c3b4c",
+        "android_client_info": {
+          "package_name": "com.example.quiz_scheduler"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAf78QtQuUS-t3MnNeXWwO2wViOZ4Q9sKI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

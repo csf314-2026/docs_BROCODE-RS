@@ -1,0 +1,33 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "quiz-scheduler-3a295",
+          "appId": "1:699022731941:android:ca6f32a98699fc958c3b4c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "quiz-scheduler-3a295",
+          "configurations": {
+            "android": "1:699022731941:android:ca6f32a98699fc958c3b4c",
+            "ios": "1:699022731941:ios:454989dd48c715b98c3b4c",
+            "macos": "1:699022731941:ios:454989dd48c715b98c3b4c",
+            "web": "1:699022731941:web:66792ccb64ddb2fc8c3b4c",
+            "windows": "1:699022731941:web:3295c0cd0e7df7b18c3b4c"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
