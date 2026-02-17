@@ -16,50 +16,56 @@ class _LoginPageState extends State<LoginPage> {
   // ==========================================================
   // GOOGLE LOGIN HANDLER
   // ==========================================================
-  Future<void> handleLogin() async {
+  // login_page.dart
 
+  Future<void> handleLogin() async {
     setState(() => isLoading = true);
 
     try {
+      var user = await AuthService().signInWithGoogle();
 
-      var user =
-          await AuthService().signInWithGoogle();
-
-      if (user != null) {
-
-        if (!mounted) return;
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                const FacultyDashboard(),
-          ),
-        );
+      if (user != null && mounted) {
+         Navigator.pushReplacement(
+           context,
+           MaterialPageRoute(builder: (_) => const FacultyDashboard()),
+         );
       }
-
     } catch (e) {
-
       if (!mounted) return;
+
+      // === FIX STARTS HERE ===
+      String errorMessage = e.toString();
+      String title = "Login Failed";
+
+      // Only show "Access Denied" if we explicitly threw that error
+      if (errorMessage.contains("Unauthorized Domain Access")) {
+        title = "Access Denied";
+        errorMessage = "Only @goa.bits-pilani.ac.in faculty or authorized admins can log in.";
+      } else {
+        // Otherwise, it's a technical error (likely Google Cloud config)
+        // Clean up the error message for readability
+        if (errorMessage.contains("popup_closed_by_user")) {
+          errorMessage = "Login cancelled.";
+        } else if (errorMessage.contains("Not a valid origin")) {
+          errorMessage = "Google Cloud Config Error: This domain/port is not whitelisted in Google Cloud Console.";
+        }
+      }
 
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text("Access Denied"),
-          content: const Text(
-            "Only @goa.bits-pilani.ac.in faculty "
-            "or authorized admins can log in.",
-          ),
+          title: Text(title),
+          content: Text(errorMessage), // Now shows the REAL reason
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.pop(context),
+              onPressed: () => Navigator.pop(context),
               child: const Text("OK"),
             ),
           ],
         ),
       );
-
+      // === FIX ENDS HERE ===
+      
     } finally {
       setState(() => isLoading = false);
     }
