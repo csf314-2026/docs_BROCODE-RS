@@ -55,17 +55,17 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
             ).add(Duration(days: dateVal.toInt()));
           }
 
-          if (parsedDate == null) continue;
+          if (parsedDate != null) {
+            DateTime normalized = DateTime(
+              parsedDate.year,
+              parsedDate.month,
+              parsedDate.day,
+            );
 
-          DateTime normalized = DateTime(
-            parsedDate.year,
-            parsedDate.month,
-            parsedDate.day,
-          );
+            int count = int.tryParse(countVal.toString()) ?? 0;
 
-          int count = int.tryParse(countVal.toString()) ?? 0;
-
-          tempData[normalized] = count;
+            tempData[normalized] = count;
+          }
         }
       }
 

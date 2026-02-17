@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -72,24 +71,19 @@ class AuthService {
   }
 
   // ==========================================================
-  // GOOGLE SIGN IN
+  // GOOGLE SIGN IN (Firebase Native)
   // ==========================================================
   Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null; 
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+      
+      // For web, this will open a popup/redirect to Google login
+      final UserCredential userCredential = 
+          await _auth.signInWithPopup(googleProvider);
+      
       User? user = userCredential.user;
 
-      // === FIXED: NULL SAFETY CHECK ===
-      // Previous code used user.email! which crashed if email was null
+      // === NULL SAFETY CHECK ===
       if (user == null || user.email == null) {
         await signOut();
         throw Exception("Login failed: Google did not provide an email address.");
@@ -111,7 +105,6 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await GoogleSignIn().signOut();
     await _auth.signOut();
   }
 }
