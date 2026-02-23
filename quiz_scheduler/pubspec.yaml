@@ -98,5 +98,5 @@ flutter:
 
 assets:
   - assets/google_logo.png
-  - assets/data/quiz_data.xlsx
+  - ../assets/data/quiz_data.xlsx
 
