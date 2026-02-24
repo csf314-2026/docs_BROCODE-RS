@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dashboard_view.dart';
 import 'schedule_quiz_view.dart';
-import 'view_quizzes_view.dart'; // 1. IMPORT THE NEW FILE
+import 'view_quizzes_view.dart';
+import 'login_page.dart';
 
 class FacultyDashboard extends StatefulWidget {
   final User user;
@@ -13,94 +14,151 @@ class FacultyDashboard extends StatefulWidget {
 }
 
 class _FacultyDashboardState extends State<FacultyDashboard> {
-  int _selectedIndex = 0; 
+  int _selectedIndex = 0;
+
+  // === RESPONSIVE LOGIC ===
+  // If width > 900, we consider it "Desktop/Wide"
+  bool isDesktop(BuildContext context) => MediaQuery.of(context).size.width >= 900;
 
   @override
   Widget build(BuildContext context) {
     String displayName = widget.user.displayName ?? "Faculty";
     String firstName = displayName.split(" ")[0];
+    String? photoUrl = widget.user.photoURL;
 
+    // 1. CONTENT SWITCHER
+    Widget content;
+    switch (_selectedIndex) {
+      case 0:
+        // Pass user to DashboardView for the "My Courses" filter
+        content = DashboardView(user: widget.user); 
+        break;
+      case 1:
+        content = ScheduleQuizView(user: widget.user);
+        break;
+      case 2:
+        content = ViewQuizzesView(user: widget.user);
+        break;
+      default:
+        content = DashboardView(user: widget.user);
+    }
+
+    // 2. BUILD UI
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
+      
+      // === APP BAR ===
       appBar: AppBar(
-        // ... (Keep your existing AppBar code) ...
         backgroundColor: Colors.white,
         elevation: 1,
+        // Hide Hamburger on Desktop (Sidebar is visible)
+        leading: isDesktop(context) 
+            ? null 
+            : Builder(builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Color(0xFF0B3C5D)),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              )),
         title: const Text("BITS Goa | Quiz Scheduler",
             style: TextStyle(color: Color(0xFF0B3C5D), fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: Color(0xFF0B3C5D)),
         actions: [
+          // User Avatar
           Padding(
-            padding: const EdgeInsets.only(right: 20),
+            padding: const EdgeInsets.only(right: 15),
             child: CircleAvatar(
               backgroundColor: const Color(0xFF0B3C5D),
-              child: Text(firstName.isNotEmpty ? firstName[0] : "U", style: const TextStyle(color: Colors.white)),
-            ),
-          )
-        ],
-      ),
-      body: Row(
-        children: [
-          // SIDEBAR
-          Container(
-            width: 250,
-            color: const Color(0xFF0B3C5D),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                
-                // 2. DASHBOARD ITEM
-                _SidebarItem(
-                  icon: Icons.dashboard,
-                  text: "Dashboard",
-                  isActive: _selectedIndex == 0,
-                  onTap: () => setState(() => _selectedIndex = 0),
-                ),
-
-                // 3. NEW "VIEW QUIZZES" ITEM
-                _SidebarItem(
-                  icon: Icons.list_alt,
-                  text: "My Quizzes",
-                  isActive: _selectedIndex == 2, // New Index
-                  onTap: () => setState(() => _selectedIndex = 2),
-                ),
-
-                // 4. SCHEDULE QUIZ ITEM
-                _SidebarItem(
-                  icon: Icons.edit_calendar,
-                  text: "Schedule Quiz",
-                  isActive: _selectedIndex == 1,
-                  onTap: () => setState(() => _selectedIndex = 1),
-                ),
-              ],
+              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+              child: photoUrl == null
+                  ? Text(firstName.isNotEmpty ? firstName[0] : "U", style: const TextStyle(color: Colors.white))
+                  : null,
             ),
           ),
-          
-          // MAIN CONTENT SWITCHER
+          // Logout Button
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: "Logout",
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (!mounted) return;
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+            },
+          ),
+          const SizedBox(width: 10),
+        ],
+      ),
+
+      // === DRAWER (Mobile Only) ===
+      drawer: isDesktop(context) ? null : Drawer(
+        child: _SidebarContent(
+          selectedIndex: _selectedIndex,
+          onItemTapped: (index) {
+            setState(() => _selectedIndex = index);
+            Navigator.pop(context); // Close drawer
+          },
+        ),
+      ),
+
+      // === BODY ===
+      body: Row(
+        children: [
+          // SIDEBAR (Desktop Only)
+          if (isDesktop(context))
+            Container(
+              width: 260,
+              color: const Color(0xFF0B3C5D),
+              child: _SidebarContent(
+                selectedIndex: _selectedIndex,
+                onItemTapped: (index) => setState(() => _selectedIndex = index),
+              ),
+            ),
+
+          // MAIN CONTENT AREA
           Expanded(
-            child: _buildBody(), 
+            child: content,
           ),
         ],
       ),
     );
   }
+}
 
-  // 5. BODY SWITCHER LOGIC
-  Widget _buildBody() {
-    switch (_selectedIndex) {
-      case 0:
-        return const DashboardView();
-      case 1:
-        return ScheduleQuizView(user: widget.user);
-      case 2:
-        return ViewQuizzesView(user: widget.user); // New View
-      default:
-        return const DashboardView();
-    }
+// === EXTRACTED SIDEBAR WIDGETS ===
+class _SidebarContent extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onItemTapped;
+
+  const _SidebarContent({required this.selectedIndex, required this.onItemTapped});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF0B3C5D),
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          _SidebarItem(
+            icon: Icons.dashboard,
+            text: "Dashboard",
+            isActive: selectedIndex == 0,
+            onTap: () => onItemTapped(0),
+          ),
+          _SidebarItem(
+            icon: Icons.edit_calendar,
+            text: "Schedule Quiz",
+            isActive: selectedIndex == 1,
+            onTap: () => onItemTapped(1),
+          ),
+          _SidebarItem(
+            icon: Icons.list_alt,
+            text: "My Quizzes",
+            isActive: selectedIndex == 2,
+            onTap: () => onItemTapped(2),
+          ),
+        ],
+      ),
+    );
   }
 }
 
-// ... (Keep your _SidebarItem class at the bottom) ...
 class _SidebarItem extends StatelessWidget {
   final IconData icon;
   final String text;
