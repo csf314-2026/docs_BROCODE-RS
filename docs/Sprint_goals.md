@@ -35,7 +35,8 @@
 - Faculty can input and "Publish" quiz details (Date, Time, Venue)  
 - Conflict alerts trigger a warning if a professor selects a date with 2+ existing quizzes  
 - Students can log in and see a chronological list of quizzes only for their registered courses  
-- Professors can edit existing quizzes, triggering a "Modified" status on the entry  
+- Professors can edit existing quizzes
+- Quiz scheduling is automatically blocked if the proposed time conflicts with the individual schedule of any enrolled student across all of their registered courses.
 
 ---
 
@@ -52,7 +53,9 @@
 - Push notifications are delivered to student devices immediately upon quiz publication  
 - Automated "Next-Day" summary notifications are sent at 8:00 PM daily  
 - Clicking a notification navigates the user directly to the relevant quiz details  
-- Notifications accurately reflect if a quiz was rescheduled (showing old vs. new time)  
+- Notifications accurately reflect if a quiz was rescheduled (showing old vs. new time)
+- midsems/compree dates and holidays will be visible on the heatmap 
+- Streamline course onboarding by allowing professors to quickly import student enrollment lists using Excel files.
 
 ---
 

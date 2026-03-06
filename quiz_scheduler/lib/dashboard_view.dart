@@ -97,19 +97,15 @@ class _DashboardViewState extends State<DashboardView> {
       DateTime proposedEnd = proposedStart.add(Duration(minutes: _durationMinutes.toInt()));
 
       // =================================================================
-      // 1. GLOBAL STUDENT CONFLICT CHECK
+      // 1. DATA GATHERING
       // =================================================================
-      
-      // Step A: Initialize conflict scope with the current course (in case it has 0 students)
       Set<String> overlappingCourses = {_selectedCourseId!};
 
-      // Step B: Find all students enrolled in this specific course
       var studentsSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('courses', arrayContains: _selectedCourseId)
           .get();
 
-      // Step C: Build a list of every single course these students are taking
       for (var student in studentsSnapshot.docs) {
         List<dynamic> studentCourses = student['courses'] ?? [];
         for (var c in studentCourses) {
@@ -117,7 +113,6 @@ class _DashboardViewState extends State<DashboardView> {
         }
       }
 
-      // Step D: Fetch all quizzes happening on the selected day
       DateTime startOfDay = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
       DateTime endOfDay = startOfDay.add(const Duration(days: 1));
 
@@ -127,48 +122,95 @@ class _DashboardViewState extends State<DashboardView> {
           .where('date_&_time', isLessThan: Timestamp.fromDate(endOfDay))
           .get();
 
-      bool hasConflict = false;
+      // =================================================================
+      // 2. HARD BLOCK: EXACT TIME OVERLAP CHECK
+      // =================================================================
+      bool hasTimeConflict = false;
       String conflictMessage = "";
 
-      // Step E: Check if any of today's quizzes belong to our students' courses AND overlap in time
       for (var doc in dayQuizzesSnapshot.docs) {
         String quizCourseId = doc['course_id'];
 
-        // Only check for time overlap if the quiz belongs to a course our students are taking
         if (overlappingCourses.contains(quizCourseId)) {
           DateTime existingStart = (doc['date_&_time'] as Timestamp).toDate();
           int existingDuration = doc['duration'] ?? 60;
           DateTime existingEnd = existingStart.add(Duration(minutes: existingDuration));
 
-          // Mathematical Overlap Logic: (Start A < End B) AND (End A > Start B)
           if (proposedStart.isBefore(existingEnd) && proposedEnd.isAfter(existingStart)) {
-            hasConflict = true;
-            String startStr = DateFormat('h:mm a').format(existingStart); // e.g., 9:00 AM
-            String endStr = DateFormat('h:mm a').format(existingEnd);     // e.g., 10:00 AM
+            hasTimeConflict = true;
+            String startStr = DateFormat('h:mm a').format(existingStart); 
+            String endStr = DateFormat('h:mm a').format(existingEnd);     
             
             conflictMessage = "$quizCourseId has a quiz from $startStr to $endStr.";
-            break; // Stop checking after the first conflict is found
+            break; 
           }
         }
       }
 
-      // Step F: Block scheduling if a conflict is found
-      if (hasConflict) {
+      if (hasTimeConflict) {
         if (!mounted) return;
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Row(children: [Icon(Icons.warning, color: Colors.red), SizedBox(width: 10), Text("Student Conflict Detected")]),
-            content: Text("Cannot schedule. Students in your course have a scheduling conflict:\n\n$conflictMessage\n\nPlease choose a different time slot."),
+            title: const Row(children: [Icon(Icons.warning, color: Colors.red), SizedBox(width: 10), Text("Time Conflict Detected")]),
+            content: Text("Cannot schedule. Students in your course have an overlapping schedule:\n\n$conflictMessage\n\nPlease choose a different time slot."),
             actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))],
           )
         );
-        setState(() => _isSubmitting = false);
-        return; // Abort saving
+        return; // Abort saving (finally block handles turning off the loading spinner)
       }
 
       // =================================================================
-      // 2. SAVE TO DATABASE (If no conflicts)
+      // 3. SOFT WARNING: HIGH DAILY WORKLOAD CHECK (2+ Quizzes)
+      // =================================================================
+      int maxQuizzesOnDay = 0;
+
+      for (var student in studentsSnapshot.docs) {
+        List<dynamic> studentCourses = student['courses'] ?? [];
+        int studentQuizCount = 0;
+        
+        for (var doc in dayQuizzesSnapshot.docs) {
+          if (studentCourses.contains(doc['course_id'])) {
+            studentQuizCount++;
+          }
+        }
+        
+        if (studentQuizCount > maxQuizzesOnDay) {
+          maxQuizzesOnDay = studentQuizCount;
+        }
+      }
+
+      if (maxQuizzesOnDay >= 2) {
+        if (!mounted) return;
+        
+        // Pause execution and wait for the user to click a button
+        bool? proceed = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false, // Force them to click a button
+          builder: (context) => AlertDialog(
+            title: const Row(children: [Icon(Icons.warning_amber_rounded, color: Colors.orange), SizedBox(width: 10), Text("High Workload Warning")]),
+            content: Text("Some students in your course already have $maxQuizzesOnDay quizzes scheduled on this day.\n\nAre you sure you want to schedule another assessment for them?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false), // Returns false
+                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true), // Returns true
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+                child: const Text("Schedule Anyway"),
+              ),
+            ],
+          )
+        );
+
+        if (proceed != true) {
+          return; // The professor canceled. Abort saving.
+        }
+      }
+
+      // =================================================================
+      // 4. SAVE TO DATABASE
       // =================================================================
       await FirebaseFirestore.instance.collection('quizzes').add({
         'title': _titleController.text.trim(), 
