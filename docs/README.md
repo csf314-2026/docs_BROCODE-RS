@@ -10,6 +10,14 @@
 4. Gaurav Srinivas : UX/Documentation
 5. Abhinandan Jain : Quality and Testing
 
+Post Sprint 2:-
+
+1. Rishabh Sahu : SPOC
+2. Abhinandan Jain : Scrum Master
+3. Gaurav Srinivas : Lead Developer
+4. Apoorv Dubey : UX/Documentation
+5. Parth Langar : Quality and Testing
+
 **Stakeholder Name & Contact: Prof Arun Raman (araman@goa.bits-pilani.ac.in)**
 
 **Submission Date:**  2026-01-27
