@@ -1,8 +1,14 @@
 # System Usability Scale (SUS) Testing
 
+**Project:** Quiz Scheduler
+**Platform:** Web Application (Desktop-first)
+**Primary Users:** PC users accessing via desktop browsers
+
+---
+
 ## 📌 Overview
 
-We conducted a System Usability Scale (SUS) evaluation to measure the usability of our website.
+We conducted a System Usability Scale (SUS) evaluation to measure the usability of the **Quiz Scheduler** web application. The system is primarily designed for desktop users, focusing on efficient scheduling, visualization, and management of quizzes.
 
 ---
 
@@ -16,8 +22,9 @@ We conducted a System Usability Scale (SUS) evaluation to measure the usability 
 
 ## 🧪 Methodology
 
-* Users interacted with the website
-* After usage, they filled a SUS questionnaire (Google Form)
+* Participants interacted with the Quiz Scheduler on desktop browsers
+* They explored core features such as scheduling, viewing, and managing quizzes
+* After interaction, they filled a SUS questionnaire (Google Form)
 * Responses were analyzed using standard SUS scoring
 
 ---
@@ -92,8 +99,8 @@ We conducted a System Usability Scale (SUS) evaluation to measure the usability 
 👉 Our system score (**92.0**) indicates:
 
 ✅ **Excellent usability (Grade A)**
-✅ Highly intuitive and easy to learn
-✅ Strong user confidence
+✅ Highly intuitive and easy to use on desktop
+✅ Strong user confidence while navigating features
 
 ---
 
@@ -101,19 +108,38 @@ We conducted a System Usability Scale (SUS) evaluation to measure the usability 
 
 ### Students:
 
-* High satisfaction overall
-* Slight drop in one response (S4) indicating minor usability friction
+* Found the system intuitive and easy to navigate
+* Required minimal effort to understand features
+* Slight usability friction observed in one case (S4)
 
 ### Faculty:
 
-* Consistently high scores
-* Stable and positive perception
+* Consistently high satisfaction
+* Appreciated clarity and structured workflow
+* Minor concerns regarding consistency in some interactions
+
+---
+
+## 🔍 Key Insights
+
+1. **High Learnability:** Users were able to quickly understand the system without prior training
+2. **Efficient Navigation:** Desktop-first design helped in smooth interaction
+3. **Strong Confidence:** Users felt comfortable scheduling and managing quizzes
+
+---
+
+## 🛠️ Recommended Improvements
+
+* Improve UI consistency across pages
+* Reduce minor complexity in certain workflows
+* Add onboarding hints/tooltips for first-time users
 
 ---
 
 ## 🚀 Conclusion
 
-The system demonstrates **excellent usability across both students and faculty**.
-While a few responses indicate minor areas for improvement, overall user experience is highly positive and intuitive.
+The Quiz Scheduler demonstrates **excellent usability**, achieving a SUS score of **92.0**, significantly above the industry benchmark.
+
+The system is intuitive, efficient, and well-suited for desktop users, with only minor improvements required for optimal user experience.
 
 ---
