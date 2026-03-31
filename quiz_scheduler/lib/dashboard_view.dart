@@ -96,9 +96,7 @@ class _DashboardViewState extends State<DashboardView> {
       DateTime proposedStart = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day, _selectedTime!.hour, _selectedTime!.minute);
       DateTime proposedEnd = proposedStart.add(Duration(minutes: _durationMinutes.toInt()));
 
-      // =================================================================
       // 1. DATA GATHERING
-      // =================================================================
       Set<String> overlappingCourses = {_selectedCourseId!};
 
       var studentsSnapshot = await FirebaseFirestore.instance
@@ -122,9 +120,7 @@ class _DashboardViewState extends State<DashboardView> {
           .where('date_&_time', isLessThan: Timestamp.fromDate(endOfDay))
           .get();
 
-      // =================================================================
       // 2. HARD BLOCK: EXACT TIME OVERLAP CHECK
-      // =================================================================
       bool hasTimeConflict = false;
       String conflictMessage = "";
 
@@ -157,12 +153,10 @@ class _DashboardViewState extends State<DashboardView> {
             actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))],
           )
         );
-        return; // Abort saving (finally block handles turning off the loading spinner)
+        return; 
       }
 
-      // =================================================================
       // 3. SOFT WARNING: HIGH DAILY WORKLOAD CHECK (2+ Quizzes)
-      // =================================================================
       int maxQuizzesOnDay = 0;
 
       for (var student in studentsSnapshot.docs) {
@@ -183,20 +177,19 @@ class _DashboardViewState extends State<DashboardView> {
       if (maxQuizzesOnDay >= 2) {
         if (!mounted) return;
         
-        // Pause execution and wait for the user to click a button
         bool? proceed = await showDialog<bool>(
           context: context,
-          barrierDismissible: false, // Force them to click a button
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Row(children: [Icon(Icons.warning_amber_rounded, color: Colors.orange), SizedBox(width: 10), Text("High Workload Warning")]),
             content: Text("Some students in your course already have $maxQuizzesOnDay quizzes scheduled on this day.\n\nAre you sure you want to schedule another assessment for them?"),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false), // Returns false
+                onPressed: () => Navigator.pop(context, false), 
                 child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true), // Returns true
+                onPressed: () => Navigator.pop(context, true), 
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
                 child: const Text("Schedule Anyway"),
               ),
@@ -205,13 +198,11 @@ class _DashboardViewState extends State<DashboardView> {
         );
 
         if (proceed != true) {
-          return; // The professor canceled. Abort saving.
+          return; 
         }
       }
 
-      // =================================================================
       // 4. SAVE TO DATABASE
-      // =================================================================
       await FirebaseFirestore.instance.collection('quizzes').add({
         'title': _titleController.text.trim(), 
         'course_id': _selectedCourseId,
@@ -241,84 +232,119 @@ class _DashboardViewState extends State<DashboardView> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(30),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWideScreen = constraints.maxWidth >= 850;
+        // Same mobile breakpoint as the other screens for consistency
+        bool isMobile = constraints.maxWidth < 768;
+
+        return Padding(
+          padding: EdgeInsets.all(isMobile ? 16 : 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Schedule Quiz", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  Text("Select a course and date to view free slots.", style: TextStyle(color: Colors.black54)),
-                ],
-              ),
-              
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('courses').where('Professor', arrayContains: widget.user.email).snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const SizedBox();
+              // --- HEADER ---
+              // FIX: Stack Title and Dropdown explicitly on mobile
+              if (isMobile)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeaderTitle(isMobile),
+                    const SizedBox(height: 16),
+                    _buildCourseDropdown(),
+                  ],
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildHeaderTitle(isMobile),
+                    _buildCourseDropdown(),
+                  ],
+                ),
 
-                  var courses = snapshot.data!.docs;
-                  List<DropdownMenuItem<String?>> items = [
-                    const DropdownMenuItem(value: null, child: Text("Select a Course")), 
-                  ];
+              SizedBox(height: isMobile ? 20 : 30),
 
-                  for (var doc in courses) {
-                    var data = doc.data() as Map<String, dynamic>;
-                    String name = data['course_name'] ?? doc.id;
-                    items.add(DropdownMenuItem(
-                      value: doc.id,
-                      child: Text(name),
-                      onTap: () => _selectedCourseName = name,
-                    ));
-                  }
-
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(color: Colors.white, border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String?>(
-                        value: _selectedCourseId,
-                        hint: const Text("Select Course"),
-                        items: items,
-                        onChanged: (val) => setState(() {
-                          _selectedCourseId = val;
-                          _selectedSlotStarts.clear();
-                        }),
-                      ),
-                    ),
-                  );
-                },
+              // --- CONTENT AREA ---
+              Expanded(
+                child: _selectedCourseId == null 
+                  ? Center(child: Text("Please select a course to continue.", style: TextStyle(color: Colors.grey, fontSize: isMobile ? 14 : 16)))
+                  : isWideScreen 
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 4, child: _buildHeatmap()),
+                            const SizedBox(width: 20),
+                            Expanded(flex: 5, child: _buildSchedulingPanel(isMobile)),
+                          ],
+                        )
+                      : SingleChildScrollView( 
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildHeatmap(),
+                              const SizedBox(height: 20),
+                              _buildSchedulingPanel(isMobile),
+                              const SizedBox(height: 40), 
+                            ],
+                          ),
+                        ),
               ),
             ],
           ),
+        );
+      }
+    );
+  }
 
-          const SizedBox(height: 20),
+  Widget _buildHeaderTitle(bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Schedule Quiz", style: TextStyle(fontSize: isMobile ? 24 : 28, fontWeight: FontWeight.bold)),
+        Text("Select a course and date to view free slots.", style: TextStyle(color: Colors.black54, fontSize: isMobile ? 14 : 16)),
+      ],
+    );
+  }
 
-          Expanded(
-            child: _selectedCourseId == null 
-              ? const Center(child: Text("Please select a course to continue.", style: TextStyle(color: Colors.grey, fontSize: 16)))
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: _buildHeatmap(),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      flex: 5,
-                      child: _buildSchedulingPanel(),
-                    ),
-                  ],
-                ),
+  Widget _buildCourseDropdown() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('courses').where('Professor', arrayContains: widget.user.email).snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+
+        var courses = snapshot.data!.docs;
+        List<DropdownMenuItem<String?>> items = [
+          const DropdownMenuItem(value: null, child: Text("Select a Course")), 
+        ];
+
+        for (var doc in courses) {
+          var data = doc.data() as Map<String, dynamic>;
+          String name = data['course_name'] ?? doc.id;
+          items.add(DropdownMenuItem(
+            value: doc.id,
+            child: Text(name, overflow: TextOverflow.ellipsis),
+          ));
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: Colors.white, border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String?>(
+              value: _selectedCourseId,
+              hint: const Text("Select Course"),
+              isExpanded: false, // Ensures dropdown doesn't force parent wide
+              items: items,
+              onChanged: (val) => setState(() {
+                _selectedCourseId = val;
+                _selectedSlotStarts.clear();
+              }),
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -425,7 +451,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildSchedulingPanel() {
+  Widget _buildSchedulingPanel(bool isMobile) {
     String formattedDate = DateFormat('EEEE, MMMM d, y').format(_selectedDay);
     DateTime startOfDay = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
     DateTime endOfDay = startOfDay.add(const Duration(days: 1));
@@ -434,79 +460,75 @@ class _DashboardViewState extends State<DashboardView> {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(25),
+        padding: EdgeInsets.all(isMobile ? 16 : 25),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(formattedDate, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0B3C5D))),
+            Text(formattedDate, style: TextStyle(fontSize: isMobile ? 18 : 20, fontWeight: FontWeight.bold, color: const Color(0xFF0B3C5D))),
             const SizedBox(height: 15),
 
-            const Text("1-Hour Free Slots (6 AM - 10 PM):", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text("1-Hour Free Slots (6 AM - 10 PM):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: isMobile ? 14 : 16)),
             const Text("Tap contiguous slots to auto-fill time and duration.", style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 10),
             
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('quizzes')
-                    .where('date_&_time', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-                    .where('date_&_time', isLessThan: Timestamp.fromDate(endOfDay))
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('quizzes')
+                  .where('date_&_time', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+                  .where('date_&_time', isLessThan: Timestamp.fromDate(endOfDay))
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
-                  List<DateTimeRange> bookedRanges = [];
-                  for (var doc in snapshot.data!.docs) {
-                    DateTime start = (doc['date_&_time'] as Timestamp).toDate();
-                    int duration = doc['duration'] ?? 60;
-                    bookedRanges.add(DateTimeRange(start: start, end: start.add(Duration(minutes: duration))));
-                  }
+                List<DateTimeRange> bookedRanges = [];
+                for (var doc in snapshot.data!.docs) {
+                  DateTime start = (doc['date_&_time'] as Timestamp).toDate();
+                  int duration = doc['duration'] ?? 60;
+                  bookedRanges.add(DateTimeRange(start: start, end: start.add(Duration(minutes: duration))));
+                }
 
-                  List<DateTime> freeSlotStarts = [];
-                  for (int i = 6; i < 22; i++) {
-                    DateTime slotStart = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day, i, 0);
-                    DateTime slotEnd = slotStart.add(const Duration(hours: 1));
-                    
-                    bool isFree = true;
-                    for (var booked in bookedRanges) {
-                      if (slotStart.isBefore(booked.end) && slotEnd.isAfter(booked.start)) {
-                        isFree = false;
-                        break;
-                      }
+                List<DateTime> freeSlotStarts = [];
+                for (int i = 6; i < 22; i++) {
+                  DateTime slotStart = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day, i, 0);
+                  DateTime slotEnd = slotStart.add(const Duration(hours: 1));
+                  
+                  bool isFree = true;
+                  for (var booked in bookedRanges) {
+                    if (slotStart.isBefore(booked.end) && slotEnd.isAfter(booked.start)) {
+                      isFree = false;
+                      break;
                     }
-                    if (isFree) freeSlotStarts.add(slotStart);
                   }
+                  if (isFree) freeSlotStarts.add(slotStart);
+                }
 
-                  if (freeSlotStarts.isEmpty) {
-                    return const Text("No free slots available on this day.", style: TextStyle(color: Colors.red));
-                  }
+                if (freeSlotStarts.isEmpty) {
+                  return const Text("No free slots available on this day.", style: TextStyle(color: Colors.red));
+                }
 
-                  return SingleChildScrollView(
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: freeSlotStarts.map((slotStart) {
-                        bool isSelected = _selectedSlotStarts.contains(slotStart);
-                        String label = "${DateFormat('h a').format(slotStart)} - ${DateFormat('h a').format(slotStart.add(const Duration(hours: 1)))}";
-                        
-                        return FilterChip(
-                          label: Text(label, style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : Colors.green.shade700)),
-                          selected: isSelected,
-                          selectedColor: const Color(0xFF0B3C5D),
-                          backgroundColor: Colors.green.shade50,
-                          side: BorderSide(color: isSelected ? const Color(0xFF0B3C5D) : Colors.green.shade200),
-                          onSelected: (bool selected) => _handleSlotSelection(slotStart, selected),
-                        );
-                      }).toList(),
-                    ),
-                  );
-                },
-              ),
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: freeSlotStarts.map((slotStart) {
+                    bool isSelected = _selectedSlotStarts.contains(slotStart);
+                    String label = "${DateFormat('h a').format(slotStart)} - ${DateFormat('h a').format(slotStart.add(const Duration(hours: 1)))}";
+                    
+                    return FilterChip(
+                      label: Text(label, style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : Colors.green.shade700)),
+                      selected: isSelected,
+                      selectedColor: const Color(0xFF0B3C5D),
+                      backgroundColor: Colors.green.shade50,
+                      side: BorderSide(color: isSelected ? const Color(0xFF0B3C5D) : Colors.green.shade200),
+                      onSelected: (bool selected) => _handleSlotSelection(slotStart, selected),
+                    );
+                  }).toList(),
+                );
+              },
             ),
             
             const Divider(height: 30),
 
-            const Text("Schedule Quiz Details", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text("Schedule Quiz Details", style: TextStyle(fontWeight: FontWeight.bold, fontSize: isMobile ? 15 : 16)),
             const SizedBox(height: 15),
 
             TextField(

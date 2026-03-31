@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // Added for platform checking
+
 import 'auth_service.dart';
 import 'faculty_dashboard.dart';
-import 'student_dashboard.dart';
+import 'student_dashboard.dart'; // Web Dashboard
+import 'mobile_student_dashboard.dart'; // Mobile Dashboard
 import 'admin_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
@@ -44,12 +47,21 @@ class _LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (_) => FacultyDashboard(user: user)),
           );
         }
-        // 2. Check Student
+        // 2. Check Student (with Web/Mobile routing)
         else if (email.endsWith('@goa.bits-pilani.ac.in')) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => StudentDashboard(user: user)),
-          );
+          if (kIsWeb) {
+            // Send to Website Dashboard
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => StudentDashboard(user: user)),
+            );
+          } else {
+            // Send to Mobile App Dashboard
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => MobileStudentDashboard(user: user)),
+            );
+          }
         } else {
           await FirebaseAuth.instance.signOut();
           _showError("Access Denied: Only BITS Goa accounts allowed.");
@@ -215,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 40),
 
-                      // 3. LOGIN SECTION (Right side of your screenshot style)
+                      // 3. LOGIN SECTION
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -228,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 15),
 
-                      // GOOGLE BUTTON (Styled like screenshot)
+                      // GOOGLE BUTTON
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -278,7 +290,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 20),
 
-                      // 4. ADMIN LOGIN (Subtle Link)
+                      // 4. ADMIN LOGIN
                       TextButton(
                         onPressed: isLoading ? null : handleAdminLogin,
                         child: Text(

@@ -12,7 +12,6 @@ class ViewQuizzesView extends StatefulWidget {
 }
 
 class _ViewQuizzesViewState extends State<ViewQuizzesView> {
-  // Toggle state: true = Upcoming, false = Past
   bool _showUpcoming = true; 
 
   // --- EDIT DIALOG ---
@@ -47,7 +46,6 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                     ),
                     const SizedBox(height: 20),
                     
-                    // Date Picker
                     OutlinedButton.icon(
                       icon: const Icon(Icons.calendar_today),
                       label: Text(DateFormat('EEE, MMM d, y').format(editDate)),
@@ -61,7 +59,6 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Time Picker
                     OutlinedButton.icon(
                       icon: const Icon(Icons.access_time),
                       label: Text(editTime.format(context)),
@@ -73,7 +70,6 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Duration Slider
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -129,39 +125,35 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
 
   @override
   Widget build(BuildContext context) {
+    bool isMobile = MediaQuery.of(context).size.width < 768;
+
     return Padding(
-      padding: const EdgeInsets.all(30),
+      padding: EdgeInsets.all(isMobile ? 16 : 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // --- HEADER & TOGGLE ---
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("My Quizzes", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  Text("Manage your scheduled assessments.", style: TextStyle(color: Colors.black54)),
-                ],
-              ),
-              
-              // Custom Toggle Button
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    _buildToggleButton("Upcoming", true),
-                    _buildToggleButton("Past", false),
-                  ],
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 20),
+          // FIX: Explicit Stack on mobile to prevent overflow
+          if (isMobile)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderTitle(isMobile),
+                const SizedBox(height: 16),
+                _buildToggleContainer(),
+              ],
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildHeaderTitle(isMobile),
+                _buildToggleContainer(),
+              ],
+            ),
+            
+          SizedBox(height: isMobile ? 20 : 30),
 
           // --- FETCH & FILTER DATA ---
           Expanded(
@@ -177,7 +169,7 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                 List<String> myCourseIds = courseSnapshot.data!.docs.map((doc) => doc.id).toList();
 
                 if (myCourseIds.isEmpty) {
-                  return _buildEmptyState("You are not listed as a professor for any courses.", Icons.school);
+                  return _buildEmptyState("You are not listed as a professor for any courses.", Icons.school, isMobile);
                 }
 
                 return StreamBuilder<QuerySnapshot>(
@@ -205,15 +197,14 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                       }
                     }
 
-                    // Reverse past quizzes so the most recent ones are at the top
                     pastQuizzes = pastQuizzes.reversed.toList();
-
                     List<QueryDocumentSnapshot> displayedQuizzes = _showUpcoming ? upcomingQuizzes : pastQuizzes;
 
                     if (displayedQuizzes.isEmpty) {
                       return _buildEmptyState(
                         _showUpcoming ? "No upcoming quizzes scheduled." : "No past quizzes found.", 
-                        _showUpcoming ? Icons.event_available : Icons.history
+                        _showUpcoming ? Icons.event_available : Icons.history,
+                        isMobile
                       );
                     }
 
@@ -221,7 +212,7 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                       itemCount: displayedQuizzes.length,
                       itemBuilder: (context, index) {
                         var data = displayedQuizzes[index].data() as Map<String, dynamic>;
-                        return _buildQuizCard(data, displayedQuizzes[index].id, isUpcoming: _showUpcoming);
+                        return _buildQuizCard(data, displayedQuizzes[index].id, isUpcoming: _showUpcoming, isMobile: isMobile);
                       },
                     );
                   },
@@ -236,12 +227,38 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
 
   // --- UI HELPERS ---
 
+  Widget _buildHeaderTitle(bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("My Quizzes", style: TextStyle(fontSize: isMobile ? 24 : 28, fontWeight: FontWeight.bold, color: Colors.black87)),
+        Text("Manage your scheduled assessments.", style: TextStyle(color: Colors.black54, fontSize: isMobile ? 14 : 16)),
+      ],
+    );
+  }
+
+  Widget _buildToggleContainer() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildToggleButton("Upcoming", true),
+          _buildToggleButton("Past", false),
+        ],
+      ),
+    );
+  }
+
   Widget _buildToggleButton(String label, bool isUpcomingButton) {
     bool isSelected = _showUpcoming == isUpcomingButton;
     return GestureDetector(
       onTap: () => setState(() => _showUpcoming = isUpcomingButton),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF0B3C5D) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -250,14 +267,15 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
           label,
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.grey.shade700,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 14 
           ),
         ),
       ),
     );
   }
 
-  Widget _buildQuizCard(Map<String, dynamic> data, String quizId, {required bool isUpcoming}) {
+  Widget _buildQuizCard(Map<String, dynamic> data, String quizId, {required bool isUpcoming, required bool isMobile}) {
     Timestamp? ts = data['date_&_time'];
     DateTime date = ts != null ? ts.toDate() : DateTime.now();
     String formattedDate = DateFormat('EEE, MMM d, y').format(date);
@@ -273,7 +291,7 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -294,23 +312,29 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("$title : $courseName : $courseId", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isUpcoming ? Colors.black87 : Colors.grey.shade700)),
+                      Text(
+                        "$title : $courseName : $courseId", 
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: isMobile ? 15 : 16, color: isUpcoming ? Colors.black87 : Colors.grey.shade700)
+                      ),
                     ],
                   ),
                 ),
 
-                // THE FIX: Grouping both actions so they only render if it's an upcoming quiz
                 if (isUpcoming) ...[
-                  // EDIT BUTTON
                   IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                    icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
+                    constraints: const BoxConstraints(), // Reduces default padding around icon
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     tooltip: "Modify Quiz",
                     onPressed: () => _showEditDialog(quizId, data),
                   ),
 
-                  // DELETE BUTTON
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
                     tooltip: "Delete Quiz",
                     onPressed: () async {
                       bool confirm = await showDialog(
@@ -334,16 +358,16 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
               ],
             ),
             
-            const SizedBox(height: 10),
+            SizedBox(height: isMobile ? 10 : 15),
             const Divider(),
-            const SizedBox(height: 10),
+            SizedBox(height: isMobile ? 10 : 15),
 
-            Row(
+            Wrap(
+              spacing: 15,
+              runSpacing: 10,
               children: [
                 _InfoChip(icon: Icons.calendar_today, label: formattedDate),
-                const SizedBox(width: 20),
                 _InfoChip(icon: Icons.access_time, label: formattedTime),
-                const SizedBox(width: 20),
                 _InfoChip(icon: Icons.timer, label: "$duration mins"),
               ],
             ),
@@ -353,15 +377,18 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
     );
   }
 
-  Widget _buildEmptyState(String message, IconData icon) {
+  Widget _buildEmptyState(String message, IconData icon, bool isMobile) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 60, color: Colors.grey[300]),
-          const SizedBox(height: 15),
-          Text(message, style: const TextStyle(color: Colors.grey, fontSize: 16)),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: isMobile ? 50 : 60, color: Colors.grey[300]),
+            const SizedBox(height: 15),
+            Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: isMobile ? 14 : 16)),
+          ],
+        ),
       ),
     );
   }
@@ -375,6 +402,7 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min, 
       children: [
         Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 6),

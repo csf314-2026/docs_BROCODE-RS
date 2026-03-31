@@ -1,8 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:excel/excel.dart' hide Border; // <--- FIX IS HERE
+import 'package:csv/csv.dart'; 
 import 'login_page.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -17,12 +18,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
   bool isUploading = false;
   String statusMessage = "";
 
-  // --- 1. GENERIC UPLOAD FUNCTION ---
-  Future<void> _uploadExcel(String type) async {
+  // --- NEW FIX: Safe Cell Extractor for dynamic CSV data ---
+  String _safeGetCellValue(dynamic cell, {String defaultValue = ""}) {
+    if (cell == null) return defaultValue;
+    String value = cell.toString().trim();
+    return value.isEmpty ? defaultValue : value;
+  }
+
+  // --- 1. GENERIC UPLOAD FUNCTION (Now using CSV) ---
+  Future<void> _uploadCSV(String type) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx'],
+        type: FileType.any, 
         withData: true,
       );
 
@@ -32,45 +39,69 @@ class _AdminDashboardState extends State<AdminDashboard> {
           statusMessage = "Parsing $type file...";
         });
 
-        var bytes = result.files.single.bytes;
-        var excel = Excel.decodeBytes(bytes!);
-        String sheetName = excel.tables.keys.first;
-        var table = excel.tables[sheetName];
+        String fileName = result.files.single.name.toLowerCase();
+        // Check for CSV extension instead of XLSX
+        if (!fileName.endsWith('.csv')) {
+          setState(() {
+            statusMessage = "❌ Error: Please select a valid .csv file.";
+            isUploading = false;
+          });
+          return;
+        }
 
-        if (table == null) throw "No data found in sheet";
+        var bytes = result.files.single.bytes;
+        if (bytes == null) throw "Could not read file data. Try again.";
+
+        // Decode the bytes to a string, then parse the CSV
+        final String csvString = utf8.decode(bytes);
+        final List<List<dynamic>> table = const CsvToListConverter().convert(csvString);
+
+        if (table.isEmpty) throw "No data found in file";
 
         int count = 0;
-        // Skip header row (rowIndex 0), start from 1
-        for (int i = 1; i < table.maxRows; i++) {
-          var row = table.rows[i];
-          if (row.isEmpty) continue;
+        int skipped = 0; 
 
-          if (type == 'users') await _processUserRow(row);
-          if (type == 'courses') await _processCourseRow(row);
-          if (type == 'quizzes') await _processQuizRow(row);
-          
-          count++;
+        // Skip header row (rowIndex 0), start from 1
+        for (int i = 1; i < table.length; i++) {
+          try {
+            var row = table[i]; 
+            // Skip completely empty rows
+            if (row.every((element) => element.toString().trim().isEmpty)) continue;
+
+            if (type == 'users') await _processUserRow(row);
+            if (type == 'courses') await _processCourseRow(row);
+            if (type == 'quizzes') await _processQuizRow(row);
+            
+            count++;
+          } catch (rowError) {
+            skipped++;
+            continue; 
+          }
         }
 
         setState(() {
-          statusMessage = "✅ Successfully uploaded $count $type!";
+          statusMessage = skipped > 0 
+              ? "✅ Uploaded $count $type! (Skipped $skipped corrupted rows)"
+              : "✅ Successfully uploaded $count $type!";
           isUploading = false;
         });
       }
     } catch (e) {
       setState(() {
-        statusMessage = "❌ Error: $e";
+        statusMessage = "❌ System Error: $e";
         isUploading = false;
       });
     }
   }
 
   // --- 2. ROW PROCESSORS ---
-  Future<void> _processUserRow(List<Data?> row) async {
+  Future<void> _processUserRow(List<dynamic> row) async {
     if (row.isEmpty) return;
-    String email = row[0]?.value.toString().trim() ?? "";
-    String role = (row.length > 1) ? row[1]?.value.toString().trim() ?? "student" : "student";
-    String coursesRaw = (row.length > 2) ? row[2]?.value.toString().trim() ?? "" : "";
+    
+    // Safely extract values
+    String email = _safeGetCellValue(row.isNotEmpty ? row[0] : null);
+    String role = _safeGetCellValue(row.length > 1 ? row[1] : null, defaultValue: "student");
+    String coursesRaw = _safeGetCellValue(row.length > 2 ? row[2] : null);
 
     if (email.isEmpty) return;
 
@@ -84,11 +115,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }, SetOptions(merge: true));
   }
 
-  Future<void> _processCourseRow(List<Data?> row) async {
+  Future<void> _processCourseRow(List<dynamic> row) async {
     if (row.length < 3) return;
-    String id = row[0]?.value.toString().trim() ?? "";
-    String name = row[1]?.value.toString().trim() ?? "";
-    String profEmail = row[2]?.value.toString().trim() ?? "";
+
+    String id = _safeGetCellValue(row.isNotEmpty ? row[0] : null);
+    String name = _safeGetCellValue(row.length > 1 ? row[1] : null);
+    String profEmail = _safeGetCellValue(row.length > 2 ? row[2] : null);
 
     if (id.isEmpty) return;
 
@@ -98,13 +130,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }, SetOptions(merge: true));
   }
 
-  Future<void> _processQuizRow(List<Data?> row) async {
+  Future<void> _processQuizRow(List<dynamic> row) async {
     if (row.length < 4) return;
-    String title = row[0]?.value.toString().trim() ?? "Quiz";
-    String courseId = row[1]?.value.toString().trim() ?? "";
-    String dateStr = row[2]?.value.toString().trim() ?? "";
-    String timeStr = row[3]?.value.toString().trim() ?? "";
-    String durationStr = (row.length > 4) ? row[4]?.value.toString().trim() ?? "60" : "60";
+
+    String title = _safeGetCellValue(row.isNotEmpty ? row[0] : null, defaultValue: "Quiz");
+    String courseId = _safeGetCellValue(row.length > 1 ? row[1] : null);
+    String dateStr = _safeGetCellValue(row.length > 2 ? row[2] : null);
+    String timeStr = _safeGetCellValue(row.length > 3 ? row[3] : null);
+    String durationStr = _safeGetCellValue(row.length > 4 ? row[4] : null, defaultValue: "60");
 
     if (courseId.isEmpty) return;
 
@@ -163,30 +196,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
               children: [
                 const Text("Bulk Data Upload", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0B3C5D))),
                 const SizedBox(height: 10),
-                const Text("Upload Excel files (.xlsx) to populate the database.", 
+                const Text("Upload CSV files (.csv) to populate the database.", 
                     style: TextStyle(color: Colors.grey, fontSize: 16)),
                 const SizedBox(height: 30),
 
                 // --- INSTRUCTIONS ---
                 _buildFormatCard("Users File Format", Icons.people, Colors.blue, 
                   "Columns: email, role, courses\n\nExample:\n"
-                  "A2: student@bits.ac.in\n"
-                  "B2: student\n"
-                  "C2: CSF111, MATHF111"
+                  "student@bits.ac.in, student, \"CSF111, MATHF111\"\n"
+                  "prof@bits.ac.in, admin, "
                 ),
                 _buildFormatCard("Courses File Format", Icons.book, Colors.green, 
                   "Columns: course_id, course_name, professor_email\n\nExample:\n"
-                  "A2: CSF111\n"
-                  "B2: Computer Programming\n"
-                  "C2: prof@bits.ac.in"
+                  "CSF111, Computer Programming, prof@bits.ac.in\n"
+                  "MATHF111, Mathematics I, mathprof@bits.ac.in"
                 ),
                 _buildFormatCard("Quizzes File Format", Icons.access_time, Colors.orange, 
                   "Columns: title, course_id, date, time, duration\n\nExample:\n"
-                  "A2: Midsem Exam\n"
-                  "B2: CSF111\n"
-                  "C2: 2026-03-15\n"
-                  "D2: 14:00\n"
-                  "E2: 90"
+                  "Midsem Exam, CSF111, 2026-03-15, 14:00, 90\n"
+                  "Quiz 1, MATHF111, 2026-04-10, 09:00, 30"
                 ),
 
                 const SizedBox(height: 40),
@@ -214,7 +242,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     decoration: BoxDecoration(
                       color: statusMessage.startsWith("✅") ? Colors.green.shade50 : Colors.red.shade50,
                       borderRadius: BorderRadius.circular(8),
-                      // The error was happening here with Border.all
                       border: Border.all(color: statusMessage.startsWith("✅") ? Colors.green : Colors.red),
                     ),
                     child: Text(statusMessage, textAlign: TextAlign.center, 
@@ -264,7 +291,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           backgroundColor: color,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        onPressed: isUploading ? null : () => _uploadExcel(type),
+        onPressed: isUploading ? null : () => _uploadCSV(type),
       ),
     );
   }

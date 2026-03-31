@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; 
+import 'package:google_sign_in/google_sign_in.dart'; 
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -9,26 +11,17 @@ class AuthService {
   // DYNAMIC AUTHORIZATION CHECK
   // ==========================================================
   Future<bool> isAuthorized(String? email) async {
-    // 1. Safety Check
-    if (email == null || email.isEmpty) {
-      print("AUTH DEBUG: Email was null or empty.");
-      return false;
-    }
+    if (email == null || email.isEmpty) return false;
 
     try {
-      // 2. Normalize
       String cleanEmail = email.trim().toLowerCase();
       String domain = cleanEmail.split('@').last;
       
-      print("AUTH DEBUG: Checking permissions for: $cleanEmail");
-
-      // 3. Fetch Whitelist from Firestore (Admin/Domains)
       DocumentSnapshot snapshot = await _firestore
           .collection('app_settings')
           .doc('access_control')
           .get();
 
-      // Default empty lists if doc doesn't exist yet
       List<dynamic> admins = [];
       List<dynamic> allowedDomains = [];
 
@@ -38,64 +31,75 @@ class AuthService {
         allowedDomains = data['allowed_domains'] ?? [];
       }
 
-      // 4. CHECK 1: Is Admin?
+      // 1. Check Admin
       List<String> cleanAdmins = admins.map((e) => e.toString().toLowerCase().trim()).toList();
-      if (cleanAdmins.contains(cleanEmail)) {
-        print("AUTH DEBUG: Access Granted (Admin Match)");
-        return true;
-      }
+      if (cleanAdmins.contains(cleanEmail)) return true;
 
-      // 5. CHECK 2: Is Allowed Domain? (Student Check)
+      // 2. Check Domain
       List<String> cleanDomains = allowedDomains.map((d) => d.toString().toLowerCase().trim()).toList();
-      if (cleanDomains.contains(domain)) {
-        print("AUTH DEBUG: Access Granted (Domain Match)");
-        return true;
-      }
+      if (cleanDomains.contains(domain)) return true;
 
-      // 6. CHECK 3: Is Professor? (The NEW Fix)
-      // We check if this email exists in the 'Professor' array of ANY course.
-      // This allows personal Gmails if they are assigned to a course.
+      // 3. Check Professor
       var professorQuery = await _firestore
           .collection('courses')
-          .where('Professor', arrayContains: cleanEmail) // Firestore check
+          .where('Professor', arrayContains: cleanEmail)
           .limit(1)
           .get();
 
-      if (professorQuery.docs.isNotEmpty) {
-        print("AUTH DEBUG: Access Granted (Professor Match)");
-        return true;
-      }
+      if (professorQuery.docs.isNotEmpty) return true;
 
-      // 7. If all checks fail -> Deny
-      print("AUTH DEBUG: Access Denied. Email not found in Admins, Domains, or Professors.");
       return false;
-
     } catch (e) {
-      print("AUTH DEBUG: Error checking authorization: $e");
       return false;
     }
   }
 
   // ==========================================================
-  // GOOGLE SIGN IN (Firebase Native - Web Popup)
+  // CROSS-PLATFORM GOOGLE SIGN IN (v7.0.0+ Compliant)
   // ==========================================================
   Future<User?> signInWithGoogle() async {
     try {
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-      
-      // Open the popup
-      final UserCredential userCredential = 
-          await _auth.signInWithPopup(googleProvider);
+      UserCredential userCredential;
+
+      if (kIsWeb) {
+        // --- WEB FLOW ---
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        userCredential = await _auth.signInWithPopup(googleProvider);
+      } else {
+        // --- MOBILE FLOW (Android/iOS) ---
+        final googleSignIn = GoogleSignIn.instance;
+        await googleSignIn.initialize(
+          serverClientId: '699022731941-8dairkag4kun3uitmdc5ebv80k4ab12m.apps.googleusercontent.com',
+        ); // Mandatory in v7+
+
+        // Step 1: Authentication (Identity)
+        final GoogleSignInAccount? googleUser = await googleSignIn.authenticate();
+        if (googleUser == null) return null; // User cancelled
+
+        // Step 2: Authorization (Permissions)
+        final List<String> scopes = ['email', 'profile'];
+        final clientAuth = await googleUser.authorizationClient.authorizeScopes(scopes);
+
+        // Step 3: Extract Identity Token
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+        // Step 4: Create Firebase Credential
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: clientAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // Step 5: Sign in to Firebase
+        userCredential = await _auth.signInWithCredential(credential);
+      }
       
       User? user = userCredential.user;
 
-      // === NULL SAFETY CHECK ===
       if (user == null || user.email == null) {
         await signOut();
         throw Exception("Login failed: Google did not provide an email address.");
       }
 
-      // Check Authorization (Admin / Domain / Professor)
       bool authorized = await isAuthorized(user.email);
 
       if (!authorized) {
@@ -112,5 +116,8 @@ class AuthService {
 
   Future<void> signOut() async {
     await _auth.signOut();
+    if (!kIsWeb) {
+      await GoogleSignIn.instance.signOut(); // Updated to singleton here too
+    }
   }
 }
