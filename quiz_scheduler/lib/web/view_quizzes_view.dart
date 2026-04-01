@@ -133,7 +133,6 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // --- HEADER & TOGGLE ---
-          // FIX: Explicit Stack on mobile to prevent overflow
           if (isMobile)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,21 +312,27 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+                        // CONSISTENT FORMAT
                         "$title : $courseName : $courseId", 
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: isMobile ? 15 : 16, color: isUpcoming ? Colors.black87 : Colors.grey.shade700)
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: isMobile ? 15 : 16, 
+                          color: isUpcoming ? Colors.black87 : Colors.grey.shade700
+                        )
                       ),
                     ],
                   ),
                 ),
 
+                // Edit/Delete Buttons (Only for Upcoming)
                 if (isUpcoming) ...[
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
-                    constraints: const BoxConstraints(), // Reduces default padding around icon
+                    constraints: const BoxConstraints(),
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    tooltip: "Modify Quiz",
+                    tooltip: "Modify",
                     onPressed: () => _showEditDialog(quizId, data),
                   ),
 
@@ -335,7 +340,7 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
                     icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
-                    tooltip: "Delete Quiz",
+                    tooltip: "Delete",
                     onPressed: () async {
                       bool confirm = await showDialog(
                         context: context,

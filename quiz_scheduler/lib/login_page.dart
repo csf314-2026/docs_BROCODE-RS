@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; // Added for platform checking
-
-import 'auth_service.dart';
-import 'faculty_dashboard.dart';
-import 'student_dashboard.dart'; // Web Dashboard
-import 'mobile_student_dashboard.dart'; // Mobile Dashboard
-import 'admin_dashboard.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,8 +11,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool isLoading = false;
-
-  // BITS Pilani Official Blue Color
   final Color bitsBlue = const Color(0xFF003366);
 
   // --- STANDARD LOGIN LOGIC ---
@@ -27,46 +18,15 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => isLoading = true);
 
     try {
-      User? user = await AuthService().signInWithGoogle();
-
-      if (user != null && mounted) {
-        String email = user.email!;
-
-        // 1. Check Professor
-        var professorQuery = await FirebaseFirestore.instance
-            .collection('courses')
-            .where('Professor', arrayContains: email)
-            .limit(1)
-            .get();
-
-        if (!mounted) return;
-
-        if (professorQuery.docs.isNotEmpty) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => FacultyDashboard(user: user)),
-          );
-        }
-        // 2. Check Student (with Web/Mobile routing)
-        else if (email.endsWith('@goa.bits-pilani.ac.in')) {
-          if (kIsWeb) {
-            // Send to Website Dashboard
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => StudentDashboard(user: user)),
-            );
-          } else {
-            // Send to Mobile App Dashboard
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => MobileStudentDashboard(user: user)),
-            );
-          }
-        } else {
-          await FirebaseAuth.instance.signOut();
-          _showError("Access Denied: Only BITS Goa accounts allowed.");
-        }
-      }
+      // 1. Save the intent BEFORE opening Google Sign-In
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('login_intent', 'standard');
+      
+      // 2. Trigger Google Auth
+      await AuthService().signInWithGoogle();
+      
+      // We DO NOT navigate here. 
+      // main.dart (AuthGate) will automatically detect the login and route the user!
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -79,29 +39,12 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => isLoading = true);
 
     try {
-      User? user = await AuthService().signInWithGoogle();
-
-      if (user != null && mounted) {
-        DocumentSnapshot accessDoc = await FirebaseFirestore.instance
-            .collection('app_settings')
-            .doc('access_control')
-            .get();
-
-        List<dynamic> admins = [];
-        if (accessDoc.exists) {
-          admins = accessDoc['admin_emails'] ?? [];
-        }
-
-        if (admins.contains(user.email)) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => AdminDashboard(user: user)),
-          );
-        } else {
-          await FirebaseAuth.instance.signOut();
-          _showError("Access Denied: You are not an Admin.");
-        }
-      }
+      // 1. Save the intent as Admin
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('login_intent', 'admin');
+      
+      // 2. Trigger Google Auth
+      await AuthService().signInWithGoogle();
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -129,18 +72,15 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB), // Very light grey background
+      backgroundColor: const Color(0xFFF9FAFB),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // --- CARD CONTAINER ---
               Container(
-                constraints: const BoxConstraints(
-                  maxWidth: 500,
-                ), // Max width for desktop look
+                constraints: const BoxConstraints(maxWidth: 500), 
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
@@ -157,22 +97,15 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(40.0),
                   child: Column(
                     children: [
-                      // 1. LOGO & HEADER
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // BITS Logo from URL
                           Image.network(
-                            "https://quantaaws.bits-goa.ac.in/pluginfile.php/1/core_admin/logo/0x200/1662896397/logo.png", // Official Wiki Logo
+                            "https://quantaaws.bits-goa.ac.in/pluginfile.php/1/core_admin/logo/0x200/1662896397/logo.png",
                             height: 80,
                             width: 80,
                             errorBuilder: (context, error, stackTrace) {
-                              // Fallback if internet fails
-                              return Icon(
-                                Icons.school,
-                                size: 80,
-                                color: bitsBlue,
-                              );
+                              return Icon(Icons.school, size: 80, color: bitsBlue);
                             },
                           ),
                           const SizedBox(width: 20),
@@ -200,12 +133,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 30),
                       const Divider(),
                       const SizedBox(height: 30),
-
-                      // 2. APP NAME
                       const Text(
                         "Evals-BPGC",
                         style: TextStyle(
@@ -224,10 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
-
                       const SizedBox(height: 40),
-
-                      // 3. LOGIN SECTION
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -239,16 +166,12 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 15),
-
-                      // GOOGLE BUTTON
                       SizedBox(
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(
-                              0xFFEEEEEE,
-                            ), // Light Grey
+                            backgroundColor: const Color(0xFFEEEEEE),
                             foregroundColor: Colors.black87,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -261,19 +184,15 @@ class _LoginPageState extends State<LoginPage> {
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    // Google "G" Icon
                                     Image.network(
-                                      "https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg",
+                                      "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
                                       height: 20,
-                                      errorBuilder: (c, o, s) =>
-                                          const Icon(Icons.login, size: 20),
+                                      errorBuilder: (c, o, s) => const Icon(Icons.login, size: 20),
                                     ),
                                     const SizedBox(width: 10),
                                     const Text(
@@ -287,10 +206,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                         ),
                       ),
-
                       const SizedBox(height: 20),
-
-                      // 4. ADMIN LOGIN
                       TextButton(
                         onPressed: isLoading ? null : handleAdminLogin,
                         child: Text(
@@ -306,7 +222,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
               const Text(
                 "© 2026 BITS Pilani, K K Birla Goa Campus",

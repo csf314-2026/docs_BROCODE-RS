@@ -1,8 +1,12 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
-import 'login_page.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import '../login_page.dart';
+import 'settings_view.dart';
 
 class MobileStudentDashboard extends StatefulWidget {
   final User user;
@@ -13,8 +17,11 @@ class MobileStudentDashboard extends StatefulWidget {
 }
 
 class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
-  int _currentIndex = 0; // Tracks which tab is active
+  int _currentIndex = 0; 
   bool _showUpcoming = true;
+  bool _hasSubscribedToTopics = false; 
+
+  // Removed initState and _silentSyncAlarms because the Cloud handles this now!
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +32,13 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
     // The list of screens for the BottomNavigationBar
     final List<Widget> screens = [
       _buildScheduleScreen(),
-      _buildPlaceholderScreen("Grades & Reports (Coming Soon)", Icons.bar_chart),
-      _buildPlaceholderScreen("App Settings", Icons.settings),
+      _buildCoursesScreen(), 
+      SettingsView(user: widget.user), // Your clean Settings View
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       
-      // === APP BAR (Mobile Optimized) ===
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
@@ -61,10 +67,8 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
         ],
       ),
 
-      // === BODY (Changes based on selected tab) ===
       body: screens[_currentIndex],
 
-      // === BOTTOM NAVIGATION BAR ===
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -72,7 +76,7 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: "Schedule"),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Grades"),
+          BottomNavigationBarItem(icon: Icon(Icons.library_books), label: "Courses"), 
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],
       ),
@@ -80,7 +84,7 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
   }
 
   // =========================================================================
-  // TAB 1: SCHEDULE VIEW (Ported from Website, stripped of Desktop logic)
+  // TAB 1: SCHEDULE VIEW
   // =========================================================================
   Widget _buildScheduleScreen() {
     return Padding(
@@ -88,12 +92,10 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Mobile specific vertical header
           const Text("My Schedule", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0B3C5D))),
           const Text("View your registered assessments.", style: TextStyle(color: Colors.black54, fontSize: 14)),
           const SizedBox(height: 16),
           
-          // Toggle Container
           Container(
             decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(8)),
             child: Row(
@@ -106,7 +108,6 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
           ),
           const SizedBox(height: 20),
 
-          // Data List
           Expanded(
             child: StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance.collection('users').doc(widget.user.email).snapshots(),
@@ -117,6 +118,14 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
                 }
 
                 List<dynamic> myCourses = userSnapshot.data!['courses'] ?? [];
+                
+                if (myCourses.isNotEmpty && !_hasSubscribedToTopics) {
+                  for (String course in myCourses) {
+                    FirebaseMessaging.instance.subscribeToTopic('course_$course');
+                  }
+                  _hasSubscribedToTopics = true; 
+                }
+
                 if (myCourses.isEmpty) return _buildEmptyState("You are not enrolled in any courses yet.", Icons.school);
 
                 return StreamBuilder<QuerySnapshot>(
@@ -168,16 +177,98 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
   }
 
   // =========================================================================
-  // OTHER TABS: PLACEHOLDERS FOR FUTURE FEATURES
+  // TAB 2: MY COURSES VIEW
   // =========================================================================
-  Widget _buildPlaceholderScreen(String title, IconData icon) {
-    return Center(
+  Widget _buildCoursesScreen() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 80, color: Colors.grey.shade300),
+          const Text("My Courses", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0B3C5D))),
+          const Text("View your registered courses.", style: TextStyle(color: Colors.black54, fontSize: 14)),
           const SizedBox(height: 20),
-          Text(title, style: const TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold)),
+
+          Expanded(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance.collection('users').doc(widget.user.email).snapshots(),
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                  return _buildEmptyState("Profile not found in database. Contact Admin.", Icons.error_outline);
+                }
+
+                List<dynamic> myCourses = userSnapshot.data!['courses'] ?? [];
+                if (myCourses.isEmpty) return _buildEmptyState("You are not enrolled in any courses yet.", Icons.school);
+
+                return StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance.collection('courses').snapshots(),
+                  builder: (context, courseSnapshot) {
+                    if (courseSnapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+
+                    List<QueryDocumentSnapshot> enrolledCourses = [];
+                    for (var doc in courseSnapshot.data!.docs) {
+                      if (myCourses.contains(doc.id)) {
+                        enrolledCourses.add(doc);
+                      }
+                    }
+
+                    if (enrolledCourses.isEmpty) {
+                      return _buildEmptyState("Your enrolled courses could not be found.", Icons.book_outlined);
+                    }
+
+                    return ListView.builder(
+                      itemCount: enrolledCourses.length,
+                      itemBuilder: (context, index) {
+                        var data = enrolledCourses[index].data() as Map<String, dynamic>;
+                        String courseId = enrolledCourses[index].id;
+                        String courseName = data['course_name'] ?? "Unknown Course";
+                        
+                        return Card(
+                          elevation: 2,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.book, color: Colors.blueAccent, size: 24),
+                                ),
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        courseName,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        courseId,
+                                        style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600, fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -243,21 +334,24 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "$title : $courseName",
+                        "$title : $courseName : $courseId",
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isUpcoming ? Colors.black87 : Colors.grey.shade700),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        courseId,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w600, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16, 
+                          color: isUpcoming ? Colors.black87 : Colors.grey.shade700
+                        ),
                       ),
                     ],
                   ),
                 ),
+                if (isUpcoming)
+                  IconButton(
+                    icon: const Icon(Icons.add_alarm, color: Colors.orange),
+                    tooltip: "Set Reminder",
+                    onPressed: () => _showAlarmDialog(title, courseId, date),
+                  ),
               ],
             ),
             
@@ -277,6 +371,90 @@ class _MobileStudentDashboardState extends State<MobileStudentDashboard> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAlarmDialog(String quizTitle, String courseId, DateTime quizTime) {
+    double alarmOffsetMinutes = 15; 
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Row(
+                children: [
+                  Icon(Icons.alarm, color: Colors.orange),
+                  SizedBox(width: 10),
+                  Text("Set Quiz Reminder", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Remind me before $quizTitle ($courseId) starts:", style: const TextStyle(fontSize: 14)),
+                  const SizedBox(height: 20),
+                  Text(
+                    "${alarmOffsetMinutes.toInt()} minutes before", 
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF0B3C5D))
+                  ),
+                  Slider(
+                    value: alarmOffsetMinutes,
+                    min: 5,
+                    max: 120, 
+                    divisions: 23, 
+                    activeColor: const Color(0xFF0B3C5D),
+                    onChanged: (val) => setStateDialog(() => alarmOffsetMinutes = val),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0B3C5D), foregroundColor: Colors.white),
+                  onPressed: () async {
+                    DateTime alarmTime = quizTime.subtract(Duration(minutes: alarmOffsetMinutes.toInt()));
+                    
+                    if (alarmTime.isBefore(DateTime.now())) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot set an alarm in the past!"), backgroundColor: Colors.red));
+                      return;
+                    }
+
+                    if (Platform.isAndroid) {
+                      final AndroidIntent intent = AndroidIntent(
+                        action: 'android.intent.action.SET_ALARM',
+                        arguments: <String, dynamic>{
+                          'android.intent.extra.alarm.HOUR': alarmTime.hour,
+                          'android.intent.extra.alarm.MINUTES': alarmTime.minute,
+                          'android.intent.extra.alarm.MESSAGE': 'Quiz: $quizTitle',
+                          'android.intent.extra.alarm.SKIP_UI': true, 
+                        },
+                      );
+                      
+                      try {
+                        await intent.launch();
+                        if (!mounted) return;
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Alarm set for ${DateFormat('h:mm a').format(alarmTime)} in your Clock app!"), backgroundColor: Colors.green));
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Could not open Clock app: $e"), backgroundColor: Colors.red));
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("System alarms are only supported on Android."), backgroundColor: Colors.orange));
+                    }
+                  },
+                  child: const Text("Set Alarm"),
+                ),
+              ],
+            );
+          }
+        );
+      }
     );
   }
 

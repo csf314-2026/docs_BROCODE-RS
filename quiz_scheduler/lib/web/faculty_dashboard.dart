@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dashboard_view.dart';
 import 'view_quizzes_view.dart';
-import 'login_page.dart';
+import '../login_page.dart';
 
 class FacultyDashboard extends StatefulWidget {
   final User user;
