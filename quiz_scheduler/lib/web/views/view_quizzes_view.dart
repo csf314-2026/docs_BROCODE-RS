@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // --- Imports for our new modules ---
-import '../widgets/faculty_quiz_card.dart';
+import '../../widgets/faculty_quiz_card.dart';
 
 class ViewQuizzesView extends StatefulWidget {
   final User user;

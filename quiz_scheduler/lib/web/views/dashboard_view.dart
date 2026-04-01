@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // --- Imports for our new modules ---
-import '../services/quiz_scheduling_service.dart';
-import '../widgets/calendar_heatmap.dart';
-import '../widgets/scheduling_panel.dart';
+import '../../services/quiz_scheduling_service.dart';
+import '../../widgets/calendar_heatmap.dart';
+import '../../widgets/scheduling_panel.dart';
 
 class DashboardView extends StatefulWidget {
   final User user;
