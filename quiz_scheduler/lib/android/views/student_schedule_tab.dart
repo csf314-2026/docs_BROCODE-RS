@@ -124,6 +124,7 @@ class _StudentScheduleTabState extends State<StudentScheduleTab> {
   }
 
   Widget _buildQuizCard(Map<String, dynamic> data, {required bool isUpcoming}) {
+    // Current Data
     Timestamp? ts = data['date_&_time'];
     DateTime date = ts != null ? ts.toDate() : DateTime.now();
     String formattedDate = DateFormat('EEE, MMM d, y').format(date); 
@@ -133,6 +134,26 @@ class _StudentScheduleTabState extends State<StudentScheduleTab> {
     String courseName = data['course_name'] ?? "Unknown Course";
     String courseId = data['course_id'] ?? "---";
     int duration = data['duration'] ?? 60;
+
+    // --- MODIFICATION LOGIC ---
+    bool isModified = data['is_modified'] ?? false;
+    String? oldTitle;
+    String? oldFormattedDate;
+    String? oldFormattedTime;
+    String? oldDurationStr;
+
+    if (isModified) {
+      oldTitle = data['previous_title'];
+      Timestamp? oldTs = data['previous_date_&_time'];
+      if (oldTs != null) {
+        DateTime oldDate = oldTs.toDate();
+        oldFormattedDate = DateFormat('EEE, MMM d, y').format(oldDate);
+        oldFormattedTime = DateFormat('h:mm a').format(oldDate);
+      }
+      if (data['previous_duration'] != null) {
+        oldDurationStr = "${data['previous_duration']} mins";
+      }
+    }
 
     return Card(
       elevation: 2,
@@ -158,6 +179,18 @@ class _StudentScheduleTabState extends State<StudentScheduleTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Show Crossed Out Old Title
+                      if (isModified && oldTitle != null && oldTitle != title) ...[
+                        Text(
+                          oldTitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.red.shade300,
+                            decoration: TextDecoration.lineThrough,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                       Text(
                         "$title : $courseName : $courseId",
                         maxLines: 2,
@@ -181,9 +214,21 @@ class _StudentScheduleTabState extends State<StudentScheduleTab> {
             Wrap(
               spacing: 15, runSpacing: 10, 
               children: [
-                _InfoChip(icon: Icons.calendar_today, label: formattedDate),
-                _InfoChip(icon: Icons.access_time, label: formattedTime),
-                _InfoChip(icon: Icons.timer, label: "$duration mins"),
+                _InfoChip(
+                  icon: Icons.calendar_today, 
+                  label: formattedDate,
+                  oldLabel: (oldFormattedDate != null && oldFormattedDate != formattedDate) ? oldFormattedDate : null,
+                ),
+                _InfoChip(
+                  icon: Icons.access_time, 
+                  label: formattedTime,
+                  oldLabel: (oldFormattedTime != null && oldFormattedTime != formattedTime) ? oldFormattedTime : null,
+                ),
+                _InfoChip(
+                  icon: Icons.timer, 
+                  label: "$duration mins",
+                  oldLabel: (oldDurationStr != null && oldDurationStr != "$duration mins") ? oldDurationStr : null,
+                ),
               ],
             ),
           ],
@@ -284,11 +329,12 @@ class _StudentScheduleTabState extends State<StudentScheduleTab> {
   }
 }
 
-// Private helper widget for the chips
 class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  const _InfoChip({required this.icon, required this.label});
+  final String? oldLabel;
+
+  const _InfoChip({required this.icon, required this.label, this.oldLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -297,6 +343,20 @@ class _InfoChip extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 6),
+        if (oldLabel != null) ...[
+          Text(
+            oldLabel!, 
+            style: TextStyle(
+              color: Colors.red.shade300, 
+              fontSize: 12, 
+              decoration: TextDecoration.lineThrough,
+              fontWeight: FontWeight.w500
+            )
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.arrow_forward, size: 12, color: Colors.grey),
+          const SizedBox(width: 4),
+        ],
         Text(label, style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w600)),
       ],
     );

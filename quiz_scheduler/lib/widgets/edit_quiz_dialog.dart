@@ -46,11 +46,24 @@ class _EditQuizDialogState extends State<EditQuizDialog> {
     try {
       DateTime finalDateTime = DateTime(editDate.year, editDate.month, editDate.day, editTime.hour, editTime.minute);
       
-      await FirebaseFirestore.instance.collection('quizzes').doc(widget.quizId).update({
-        'title': titleController.text.trim(),
-        'date_&_time': Timestamp.fromDate(finalDateTime),
-        'duration': editDuration.toInt(),
-      });
+      // --- NEW: Check if anything actually changed before saving ---
+      bool titleChanged = titleController.text.trim() != widget.currentData['title'];
+      bool dateChanged = !finalDateTime.isAtSameMomentAs((widget.currentData['date_&_time'] as Timestamp).toDate());
+      bool durationChanged = editDuration.toInt() != widget.currentData['duration'];
+
+      if (titleChanged || dateChanged || durationChanged) {
+        await FirebaseFirestore.instance.collection('quizzes').doc(widget.quizId).update({
+          'title': titleController.text.trim(),
+          'date_&_time': Timestamp.fromDate(finalDateTime),
+          'duration': editDuration.toInt(),
+          
+          // --- NEW: Save the previous state to show the strikethrough in the UI ---
+          'previous_title': widget.currentData['title'],
+          'previous_date_&_time': widget.currentData['date_&_time'],
+          'previous_duration': widget.currentData['duration'],
+          'is_modified': true,
+        });
+      }
       
       if (!mounted) return;
       Navigator.pop(context);

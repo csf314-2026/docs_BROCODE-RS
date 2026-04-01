@@ -21,17 +21,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
     String firstName = displayName.split(" ")[0];
     String? photoUrl = widget.user.photoURL;
 
-    // --- RESPONSIVE BREAKPOINTS ---
     bool isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      
-      // === APP BAR ===
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        // FIX: Shorter title on mobile to prevent overflow
         title: Text(isMobile ? "Student Dashboard" : "BITS Goa | Student Dashboard",
             style: const TextStyle(color: Color(0xFF0B3C5D), fontWeight: FontWeight.bold, fontSize: 18)),
         actions: [
@@ -39,7 +35,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             padding: const EdgeInsets.only(right: 15),
             child: CircleAvatar(
               backgroundColor: const Color(0xFF0B3C5D),
-              radius: 16, // Slightly smaller on mobile
+              radius: 16,
               backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
               child: photoUrl == null
                   ? Text(firstName.isNotEmpty ? firstName[0] : "S", style: const TextStyle(color: Colors.white, fontSize: 14))
@@ -58,8 +54,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
           const SizedBox(width: 5),
         ],
       ),
-
-      // === BODY ===
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
@@ -68,8 +62,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER & TOGGLE ---
-                // FIX: Explicitly stack on mobile, side-by-side on desktop
                 if (isMobile)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +83,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   
                 SizedBox(height: isMobile ? 20 : 30),
 
-                // --- DATA FETCHING ---
                 Expanded(
                   child: StreamBuilder<DocumentSnapshot>(
                     stream: FirebaseFirestore.instance.collection('users').doc(widget.user.email).snapshots(),
@@ -163,8 +154,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  // --- UI HELPERS ---
-
   Widget _buildHeaderTitle(bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,15 +203,30 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildQuizCard(Map<String, dynamic> data, {required bool isUpcoming, required bool isMobile}) {
+    // Current Data
     Timestamp? ts = data['date_&_time'];
     DateTime date = ts != null ? ts.toDate() : DateTime.now();
-    String formattedDate = DateFormat('EEE, MMM d, y').format(date); // Shorter date format
+    String formattedDate = DateFormat('EEE, MMM d, y').format(date);
     String formattedTime = DateFormat('h:mm a').format(date);
     
     String title = data['title'] ?? "Quiz";
     String courseName = data['course_name'] ?? "Unknown Course";
     String courseId = data['course_id'] ?? "---";
     int duration = data['duration'] ?? 60;
+
+    // --- NEW: MODIFICATION UI LOGIC ---
+    bool isModified = data['is_modified'] ?? false;
+    String? oldTitle = isModified ? data['previous_title'] : null;
+    String? oldDate;
+    String? oldTime;
+    String? oldDur;
+
+    if (isModified && data['previous_date_&_time'] != null) {
+      DateTime oD = (data['previous_date_&_time'] as Timestamp).toDate();
+      oldDate = DateFormat('EEE, MMM d, y').format(oD);
+      oldTime = DateFormat('h:mm a').format(oD);
+      oldDur = "${data['previous_duration']} mins";
+    }
 
     return Card(
       elevation: 2,
@@ -248,6 +252,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Show crossed-out old title if changed
+                      if (isModified && oldTitle != null && oldTitle != title)
+                        Text(
+                          oldTitle, 
+                          style: TextStyle(
+                            color: Colors.red.shade300, 
+                            decoration: TextDecoration.lineThrough, 
+                            fontSize: 13, 
+                            fontWeight: FontWeight.bold
+                          )
+                        ),
                       Text(
                         "$title : $courseName",
                         maxLines: 2,
@@ -275,9 +290,21 @@ class _StudentDashboardState extends State<StudentDashboard> {
               spacing: 15, 
               runSpacing: 10, 
               children: [
-                _InfoChip(icon: Icons.calendar_today, label: formattedDate),
-                _InfoChip(icon: Icons.access_time, label: formattedTime),
-                _InfoChip(icon: Icons.timer, label: "$duration mins"),
+                _InfoChip(
+                  icon: Icons.calendar_today, 
+                  label: formattedDate, 
+                  oldLabel: (oldDate != null && oldDate != formattedDate) ? oldDate : null
+                ),
+                _InfoChip(
+                  icon: Icons.access_time, 
+                  label: formattedTime, 
+                  oldLabel: (oldTime != null && oldTime != formattedTime) ? oldTime : null
+                ),
+                _InfoChip(
+                  icon: Icons.timer, 
+                  label: "$duration mins", 
+                  oldLabel: (oldDur != null && oldDur != "$duration mins") ? oldDur : null
+                ),
               ],
             ),
           ],
@@ -306,7 +333,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
 class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  const _InfoChip({required this.icon, required this.label});
+  final String? oldLabel; // Support for strikethrough labels
+
+  const _InfoChip({required this.icon, required this.label, this.oldLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -315,6 +344,19 @@ class _InfoChip extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 6),
+        if (oldLabel != null) ...[
+          Text(
+            oldLabel!, 
+            style: TextStyle(
+              color: Colors.red.shade300, 
+              decoration: TextDecoration.lineThrough, 
+              fontSize: 12
+            )
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.arrow_forward, size: 12, color: Colors.grey),
+          const SizedBox(width: 4),
+        ],
         Text(label, style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w600)),
       ],
     );

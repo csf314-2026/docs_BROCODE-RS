@@ -26,32 +26,41 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+ WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
-  // Initialize Local Notifications
-  await NotificationService().init(); 
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // Guard mobile-only initializations
+  if (!kIsWeb) {
+    try {
+      await NotificationService().init(); 
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    } catch (e) {
+      debugPrint("Mobile service init failed: $e");
+    }
+  }
 
-  // --- FCM FOREGROUND LISTENER ---
+  // Handle FCM foreground messages
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     if (message.notification != null) {
-      NotificationService().flutterLocalNotificationsPlugin.show(
-        // ADD THESE NAMES:
-        id: message.hashCode,
-        title: message.notification!.title,
-        body: message.notification!.body,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'quiz_updates',
-            'Quiz Updates',
-            channelDescription: 'Notifications for new quizzes',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+      // Only show local notification banners on mobile
+      if (!kIsWeb) {
+        NotificationService().flutterLocalNotificationsPlugin.show(
+          id: message.hashCode,
+          title: message.notification!.title,
+          body: message.notification!.body,
+          notificationDetails: const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'quiz_updates',
+              'Quiz Updates',
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Optional: Show a simple SnackBar on web instead
+        debugPrint("Foreground message received on web: ${message.notification!.title}");
+      }
     }
   });
 

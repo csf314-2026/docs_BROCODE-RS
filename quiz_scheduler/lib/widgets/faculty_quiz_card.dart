@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'edit_quiz_dialog.dart'; // Import our new dialog widget
+import 'edit_quiz_dialog.dart'; 
 
 class FacultyQuizCard extends StatelessWidget {
   final String quizId;
@@ -19,15 +19,35 @@ class FacultyQuizCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Current Data
     Timestamp? ts = data['date_&_time'];
     DateTime date = ts != null ? ts.toDate() : DateTime.now();
     String formattedDate = DateFormat('EEE, MMM d, y').format(date);
     String formattedTime = DateFormat('h:mm a').format(date);
-    
     String title = data['title'] ?? "Quiz";
     String courseName = data['course_name'] ?? "Unknown Course";
     String courseId = data['course_id'] ?? "---";
     int duration = data['duration'] ?? 60;
+
+    // --- NEW: Previous Data Extraction ---
+    bool isModified = data['is_modified'] ?? false;
+    String? oldTitle;
+    String? oldFormattedDate;
+    String? oldFormattedTime;
+    String? oldDurationStr;
+
+    if (isModified) {
+      oldTitle = data['previous_title'];
+      Timestamp? oldTs = data['previous_date_&_time'];
+      if (oldTs != null) {
+        DateTime oldDate = oldTs.toDate();
+        oldFormattedDate = DateFormat('EEE, MMM d, y').format(oldDate);
+        oldFormattedTime = DateFormat('h:mm a').format(oldDate);
+      }
+      if (data['previous_duration'] != null) {
+        oldDurationStr = "${data['previous_duration']} mins";
+      }
+    }
 
     return Card(
       elevation: 2,
@@ -55,6 +75,30 @@ class FacultyQuizCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // --- NEW: Crossed out old title ---
+                      if (isModified && oldTitle != null && oldTitle != title) ...[
+                        Row(
+                          children: [
+                            const Icon(Icons.edit_note, size: 14, color: Colors.redAccent),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                oldTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isMobile ? 13 : 14,
+                                  color: Colors.red.shade300,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                      ],
+                      // Current Title
                       Text(
                         "$title : $courseName : $courseId", 
                         maxLines: 2,
@@ -69,7 +113,7 @@ class FacultyQuizCard extends StatelessWidget {
                   ),
                 ),
 
-                // Edit/Delete Buttons (Only for Upcoming)
+                // Edit/Delete Buttons
                 if (isUpcoming) ...[
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
@@ -116,13 +160,26 @@ class FacultyQuizCard extends StatelessWidget {
             const Divider(),
             SizedBox(height: isMobile ? 10 : 15),
 
+            // --- NEW: Passing the old data to the InfoChips ---
             Wrap(
               spacing: 15,
               runSpacing: 10,
               children: [
-                _InfoChip(icon: Icons.calendar_today, label: formattedDate),
-                _InfoChip(icon: Icons.access_time, label: formattedTime),
-                _InfoChip(icon: Icons.timer, label: "$duration mins"),
+                _InfoChip(
+                  icon: Icons.calendar_today, 
+                  label: formattedDate,
+                  oldLabel: (oldFormattedDate != null && oldFormattedDate != formattedDate) ? oldFormattedDate : null,
+                ),
+                _InfoChip(
+                  icon: Icons.access_time, 
+                  label: formattedTime,
+                  oldLabel: (oldFormattedTime != null && oldFormattedTime != formattedTime) ? oldFormattedTime : null,
+                ),
+                _InfoChip(
+                  icon: Icons.timer, 
+                  label: "$duration mins",
+                  oldLabel: (oldDurationStr != null && oldDurationStr != "$duration mins") ? oldDurationStr : null,
+                ),
               ],
             ),
           ],
@@ -132,10 +189,13 @@ class FacultyQuizCard extends StatelessWidget {
   }
 }
 
+// --- NEW: Upgraded InfoChip to support Strikethrough ---
 class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  const _InfoChip({required this.icon, required this.label});
+  final String? oldLabel; // Optional old data
+
+  const _InfoChip({required this.icon, required this.label, this.oldLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +204,20 @@ class _InfoChip extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 6),
+        if (oldLabel != null) ...[
+          Text(
+            oldLabel!, 
+            style: TextStyle(
+              color: Colors.red.shade300, 
+              fontSize: 12, 
+              decoration: TextDecoration.lineThrough,
+              fontWeight: FontWeight.w500
+            )
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.arrow_forward, size: 12, color: Colors.grey),
+          const SizedBox(width: 4),
+        ],
         Text(label, style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w500)),
       ],
     );
