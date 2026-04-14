@@ -7,6 +7,7 @@ class CalendarHeatmap extends StatelessWidget {
   final DateTime focusedDay;
   final DateTime selectedDay;
   final Function(DateTime selected, DateTime focused) onDaySelected;
+  final FirebaseFirestore? firestore;
 
   const CalendarHeatmap({
     super.key,
@@ -14,6 +15,7 @@ class CalendarHeatmap extends StatelessWidget {
     required this.focusedDay,
     required this.selectedDay,
     required this.onDaySelected,
+    this.firestore,
   });
 
   // --- STYLING LOGIC ---
@@ -42,13 +44,13 @@ class CalendarHeatmap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('quizzes').snapshots(),
+      stream: (firestore ?? FirebaseFirestore.instance).collection('quizzes').snapshots(),
       builder: (context, quizSnapshot) {
         return StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection('events').snapshots(),
+          stream: (firestore ?? FirebaseFirestore.instance).collection('events').snapshots(),
           builder: (context, eventSnapshot) {
             return StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('users').where('courses', arrayContains: selectedCourseId).snapshots(),
+              stream: (firestore ?? FirebaseFirestore.instance).collection('users').where('courses', arrayContains: selectedCourseId).snapshots(),
               builder: (context, studentSnapshot) {
                 if (!quizSnapshot.hasData || !studentSnapshot.hasData || !eventSnapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());

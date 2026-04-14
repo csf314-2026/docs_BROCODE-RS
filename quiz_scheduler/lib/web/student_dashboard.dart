@@ -6,7 +6,8 @@ import '../login_page.dart';
 
 class StudentDashboard extends StatefulWidget {
   final User user;
-  const StudentDashboard({super.key, required this.user});
+  final FirebaseFirestore? firestore;
+  const StudentDashboard({super.key, required this.user, this.firestore});
 
   @override
   State<StudentDashboard> createState() => _StudentDashboardState();
@@ -76,7 +77,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      _buildHeaderTitle(isMobile),
+                      Expanded(child: _buildHeaderTitle(isMobile)),
                       _buildToggleContainer(),
                     ],
                   ),
@@ -85,7 +86,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
                 Expanded(
                   child: StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance.collection('users').doc(widget.user.email).snapshots(),
+                    stream: (widget.firestore ?? FirebaseFirestore.instance).collection('users').doc(widget.user.email).snapshots(),
                     builder: (context, userSnapshot) {
                       if (userSnapshot.hasError) return const Text("Error loading student profile.");
                       if (userSnapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
@@ -101,7 +102,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       }
 
                       return StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance.collection('quizzes').orderBy('date_&_time').snapshots(),
+                        stream: (widget.firestore ?? FirebaseFirestore.instance).collection('quizzes').orderBy('date_&_time').snapshots(),
                         builder: (context, quizSnapshot) {
                           if (quizSnapshot.hasError) return const Text("Error loading quizzes.");
                           if (quizSnapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());

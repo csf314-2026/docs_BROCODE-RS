@@ -8,6 +8,7 @@ class SchedulingPanel extends StatefulWidget {
   final String? selectedCourseId;
   final bool isSubmitting;
   final Function(String title, TimeOfDay time, double duration) onSubmit;
+  final FirebaseFirestore? firestore;
 
   const SchedulingPanel({
     super.key,
@@ -16,6 +17,7 @@ class SchedulingPanel extends StatefulWidget {
     required this.selectedCourseId,
     required this.isSubmitting,
     required this.onSubmit,
+    this.firestore,
   });
 
 @override
@@ -119,7 +121,7 @@ class SchedulingPanelState extends State<SchedulingPanel> {
             const SizedBox(height: 10),
             
             StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
+              stream: (widget.firestore ?? FirebaseFirestore.instance)
                   .collection('quizzes')
                   .where('date_&_time', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
                   .where('date_&_time', isLessThan: Timestamp.fromDate(endOfDay))
