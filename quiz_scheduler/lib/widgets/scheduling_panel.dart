@@ -110,9 +110,10 @@ class SchedulingPanelState extends State<SchedulingPanel> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: EdgeInsets.all(widget.isMobile ? 16 : 25),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text(formattedDate, style: TextStyle(fontSize: widget.isMobile ? 18 : 20, fontWeight: FontWeight.bold, color: const Color(0xFF0B3C5D))),
             const SizedBox(height: 15),
 
@@ -252,7 +253,8 @@ class SchedulingPanelState extends State<SchedulingPanel> {
                     : const Text("Confirm & Schedule", style: TextStyle(fontSize: 16)),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
