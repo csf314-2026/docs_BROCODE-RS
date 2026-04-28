@@ -52,16 +52,17 @@ Security and privacy are top priorities. You **must** use your BITS Goa Google a
 
 ## 3. Access & Installation
 
-### For Faculty (Web Dashboard)
+### For Faculty and Students (Web Dashboard)
 You do not need to download anything.
 1. Open your browser and navigate to the Quiz Scheduler portal.
 2. Click **"Sign in with Google"**.
 3. Select your `@bits-goa.ac.in` account.
 
-### For Students (Mobile App: BITS Goa Evals)
-1. Download the **BITS Goa Evals** app (link provided by the academic office).
-2. Open the app and log in with your `@bits-goa.ac.in` account.
-3. When prompted, **allow Push Notifications** to receive schedule updates.
+### For Faculty and Students (Mobile App: BITS Goa Evals)
+1. Download the apk from here : https://drive.google.com/file/d/1QtiXh8x-eRTFWAYi0dx75MH6f9w2aJ9h/view?usp=sharing
+2. install the **BITS Goa Evals** app.
+3. Open the app and log in with your `@bits-goa.ac.in` account.
+4. When prompted, **allow Push Notifications** to receive schedule updates.
 
 ---
 
