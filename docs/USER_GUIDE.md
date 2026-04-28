@@ -1,6 +1,4 @@
-**TL;DR:** I have updated the Quiz Scheduler User Guide to entirely remove all references to venue booking, aligning it perfectly with the faculty dashboard UI you provided.
 
-Here is the revised user guide with those corrections applied.
 
 ***
 
@@ -18,7 +16,7 @@ Here is the revised user guide with those corrections applied.
 4. [App Overview](#4-app-overview)
 5. [Faculty Guide: Scheduling a Quiz](#5-faculty-guide-scheduling-a-quiz)
 6. [Faculty Guide: Importing Student Lists](#6-faculty-guide-importing-student-lists)
-7. [Student Guide: Managing Your Timeline](#7-student-guide-managing-your-timeline)
+7. [Student Guide: Managing Your Schedule (BITS Goa Evals)](#7-student-guide-managing-your-schedule-bits-goa-evals)
 8. [Notifications & Calendar Sync](#8-notifications--calendar-sync)
 9. [Tips & FAQ](#9-tips--faq)
 
@@ -28,14 +26,14 @@ Here is the revised user guide with those corrections applied.
 
 Quiz Scheduler is a centralized platform designed to eliminate "evaluation clusters"—those stressful days when multiple high-stakes quizzes overlap. 
 
-By calculating evaluation density based on real student enrollments, the system provides faculty with a visual heatmap of student workload, ensuring quizzes are placed on optimal dates. Meanwhile, students get a personalized, consolidated timeline of their academic deadlines.
+By calculating evaluation density based on real student enrollments, the system provides faculty with a visual heatmap of student workload, ensuring quizzes are placed on optimal dates. Meanwhile, students get a personalized, consolidated timeline of their academic deadlines via the companion mobile app, **BITS Goa Evals**.
 
 **Who is it for?**
 
 | User | Platform | Core Use Case |
 |---|---|---|
 | 👨‍🏫 **Faculty** | Web Dashboard | Finding clash-free dates via the Heatmap and scheduling quizzes. |
-| 🎓 **Students** | Mobile App | Viewing a chronological list of their upcoming quizzes and getting alerts. |
+| 🎓 **Students** | Mobile App | Viewing upcoming/past assessments and receiving automated alerts. |
 | ⚙️ **Admins** | Web Dashboard | Managing global schedules and resolving cross-department conflicts. |
 
 ---
@@ -44,7 +42,7 @@ By calculating evaluation density based on real student enrollments, the system 
 
 ### Requirements
 - A valid **@bits-goa.ac.in** (or institutional) Google account.
-- **For Faculty:** A modern web browser (Chrome, Firefox, Safari) on a desktop or tablet.
+- **For Faculty:** A modern web browser on a desktop or tablet.
 - **For Students:** An Android or iOS smartphone with the app installed and notifications enabled.
 
 ### First Login — Institutional Access
@@ -56,17 +54,14 @@ Security and privacy are top priorities. You **must** use your BITS Goa Google a
 
 ### For Faculty (Web Dashboard)
 You do not need to download anything.
-1. Open your browser and navigate to the Quiz Scheduler portal (e.g., `scheduler.bits-goa.ac.in`).
+1. Open your browser and navigate to the Quiz Scheduler portal.
 2. Click **"Sign in with Google"**.
 3. Select your `@bits-goa.ac.in` account.
-4. You will be immediately redirected to your Faculty Dashboard, pre-populated with the courses you are teaching.
 
-### For Students (Mobile App)
-The app is available for smartphones to ensure you get real-time push notifications.
-1. Download the **Quiz Scheduler App** (link provided by the academic office).
-2. Open the app and tap **"Continue with Google"**.
-3. Select your `@bits-goa.ac.in` account.
-4. When prompted, **allow Push Notifications**. This is critical for receiving next-day reminders and alerts about rescheduled quizzes.
+### For Students (Mobile App: BITS Goa Evals)
+1. Download the **BITS Goa Evals** app (link provided by the academic office).
+2. Open the app and log in with your `@bits-goa.ac.in` account.
+3. When prompted, **allow Push Notifications** to receive schedule updates.
 
 ---
 
@@ -87,50 +82,47 @@ The app is available for smartphones to ensure you get real-time push notificati
 └──────────────┴───────────────────────────────────────────┘
 ```
 
-### Student Mobile App Layout
+### Student Mobile App Layout (BITS Goa Evals)
 
 ```text
-┌────────────────────────────┐
-│ 📅 My Timeline             │
-├────────────────────────────┤
-│  Tomorrow                  │
-│  [📕 EEE F211 - Quiz 1]    │
-│  4:00 PM - 5:00 PM         │
-├────────────────────────────┤
-│  Next Week                 │
-│  [📘 CS F301 - Midterm]    │
-│  Monday | 10:00 AM         │
-├────────────────────────────┤
-│  [ Sync to Calendar 🔗 ]   │
-└────────────────────────────┘
+┌──────────────────────────────────────┐
+│  BITS Goa Evals             [P] [➔]  │
+├──────────────────────────────────────┤
+│  My Schedule                         │
+│  [ Upcoming ] [ Past ]               │
+│                                      │
+│  [📖 Computer Programming: Quiz 1] ⏰│ 
+│  📅 Wed, Apr 29, 2026  🕒 7:00 AM    │
+│  ⏱️ 60 mins                          │
+├──────────────────────────────────────┤
+│  [📅 Schedule] [📚 Courses] [⚙️ Settings] │
+└──────────────────────────────────────┘
 ```
+*(Alarm icon shown as ⏰ in the UI mockup)*
 
 ---
 
 ## 5. Faculty Guide: Scheduling a Quiz
 
 ### Step 1 — Select Your Course
-On your dashboard, navigate to **Schedule Quiz**. Select the course you want to schedule a quiz for from the top right dropdown menu (e.g., "Computer Programming").
+On your dashboard, navigate to **Schedule Quiz**. Select the course you want to schedule a quiz for from the top right dropdown menu.
 
 ### Step 2 — Check the Heatmap
 You will see a Calendar Heatmap for the month. Dates are color-coded based on your students' existing workloads:
-- **Green:** Clear schedule (0 quizzes).
+- **Light Gray:** Clear schedule (0 quizzes).
 - **Yellow:** Moderate workload (1 quiz).
 - **Red:** High density (2+ quizzes). *Avoid these dates.*
-- **Gray text/No interaction:** Holidays, Midsems, or Compre dates.
+- **Gray text:** Holidays, Midsems, or Compre dates.
 
 ### Step 3 — Create the Quiz
 1. Click on an available date on the calendar.
-2. The right panel will display **Free Slots** (e.g., 6 AM - 7 AM). Tap a contiguous slot to auto-fill the time.
+2. The right panel will display **Free Slots**. Tap a contiguous slot to auto-fill the time.
 3. Under **Schedule Quiz Details**, enter your **Quiz Title**.
 4. Adjust the **Duration** using the slider if needed.
 5. Click **Confirm & Schedule**. 
 
-> [!IMPORTANT]
-> **Conflict Alert:** If you attempt to schedule on a "Red" date or pick a time that directly conflicts with another quiz for your enrolled students, the system will block the scheduling and display a warning.
-
 ### Step 4 — Modifying a Quiz
-If you need to change a date or time, simply navigate to **My Quizzes**, click on the existing quiz, and edit the details. Once you click Update, the heatmap will recalculate automatically, and a "Revision Alert" will be sent to all enrolled students.
+Navigate to **My Quizzes**, click on the existing quiz, and edit the details. Once updated, the heatmap recalculates, and an alert is sent to all enrolled students.
 
 ---
 
@@ -138,55 +130,51 @@ If you need to change a date or time, simply navigate to **My Quizzes**, click o
 
 To ensure the heatmap accurately reflects your specific class, you must upload your enrollment data.
 
-1. **Download from ERP:** Log into Quanta (ERP) and download your course's student registration list as a CSV file.
-2. **Navigate to Students:** On the Quiz Scheduler dashboard, go to the **Students/Enrollment** section.
-3. **Upload CSV:** Click **Import from ERP/CSV** and upload the file.
-4. **Validate & Sync:** The system will preview the `@bits-goa.ac.in` emails. Click **Confirm Import**. The students are now linked to your course and will contribute to the heatmap logic.
+1. **Download from ERP:** Log into Quanta and download your course's student registration list (CSV).
+2. **Navigate to Students:** On the dashboard, go to the **Students/Enrollment** section.
+3. **Upload & Sync:** Click **Import from ERP/CSV**, upload the file, and click **Confirm Import**.
 
 ---
 
-## 7. Student Guide: Managing Your Timeline
+## 7. Student Guide: Managing Your Schedule (BITS Goa Evals)
 
-Once logged in, the mobile app does the heavy lifting for you. 
 
-* **Chronological View:** Your home screen displays a unified list of every upcoming quiz, midterm, and deadline across all your registered courses.
-* **Change Logs:** If a professor reschedules a quiz, the app highlights the changes. You will see the old time crossed out and the new time highlighted in red, so there's no confusion.
-* **Privacy:** You will *only* see evaluations for courses you are actively enrolled in.
+The mobile app organizes your academic life into three simple tabs located at the bottom of the screen:
+
+* **📅 Schedule:** This is your main hub. It displays a chronological list of your registered assessments. Toggle between **Upcoming** to see future deadlines and **Past** to review previous quizzes. 
+* **⏰ Custom Quiz Alarms:** On the "Upcoming" schedule view, you'll see an orange clock icon next to each quiz card. Tap it to open the **Set Quiz Reminder** menu. Use the slider to select exactly when you want to be alerted (e.g., 45 minutes before the quiz starts) and tap **Set Alarm**. 
+* **📚 Courses:** View a complete list of your actively registered courses and their respective course codes.
+* **⚙️ Settings:** Manage your notification preferences and calendar integrations here.
 
 ---
 
 ## 8. Notifications & Calendar Sync
 
-### Real-Time Push Alerts
-You don't need to constantly refresh the app. You will receive an immediate push notification the moment:
-* A new quiz is published for your course.
-* An existing quiz date or time is modified.
 
-### Daily Summary Reminders
-Every evening at **8:00 PM**, the app checks your schedule. If you have an evaluation the following day, you will receive a single "Next-Day Summary" notification to help you finalize your prep.
+### Notification Preferences
+You can control how often you are reminded about upcoming assessments by navigating to the **Settings** tab. 
+* Under **Reminder Frequency**, you can select your preferred alert interval (or turn them "Off").
+* *Note:* Daily overview notifications are sent at **7:15 AM IST**, and weekly summary overviews are sent on **Sundays**.
 
-### Sync to External Calendars
-Want to see your quizzes alongside your personal events? 
-1. Open the app and go to your Timeline.
-2. Tap the **Sync to Calendar** button at the bottom.
-3. The app will generate an `.ics` file or directly prompt you to add the events to Google Calendar or Apple Calendar.
+### Google Calendar Sync
+To see your quizzes alongside your personal events:
+1. Go to the **Settings** tab.
+2. Locate the **Google Calendar Sync** card.
+3. Toggle **Sync Active** to the ON position (green). 
+4. Registered quizzes will automatically be added to your primary Google Calendar and will update dynamically if a professor modifies the schedule.
 
 ---
 
 ## 9. Tips & FAQ
 
-**Q: I’m a student and I don’t see a quiz that my professor announced in class. Why?**
-> The professor may not have uploaded the enrollment CSV yet, or they haven't officially published the quiz in the system. Check back later, or politely remind your instructor to sync the Quanta list!
+**Q: I’m a student and my "Courses" tab is missing a subject. Why?**
+> The professor may not have uploaded the enrollment CSV yet. Check back later, or remind your instructor to sync the Quanta list.
 
-**Q: I’m a professor. The system won't let me schedule a quiz on a specific Thursday. Why?**
-> That specific time slot directly conflicts with another quiz your enrolled students are taking, or the day already has maximum evaluation density (Red status). Please check the heatmap for an alternative date.
+**Q: I’m a professor. The system won't let me schedule a quiz on a specific day. Why?**
+> That time slot directly conflicts with another quiz your students are taking, or the day already has maximum evaluation density (Red status).
 
 **Q: I changed a quiz time. Do I need to email my students?**
-> No! The moment you hit "Update" on a quiz, the system automatically sends a push notification to every enrolled student detailing the exact time changes. 
-
-**Q: Can a club or department use this for non-academic events?**
-> Currently, the Quiz Scheduler is strictly integrated with the academic ERP to prevent high-stakes academic clashes. Non-academic events are out of scope.
+> No! The system automatically updates the student's app, scheduled alarms, and Google Calendar (if synced). 
 
 ---
 
-Would you like me to refine the "My Quizzes" section as well, assuming it's the next tab on the sidebar?
