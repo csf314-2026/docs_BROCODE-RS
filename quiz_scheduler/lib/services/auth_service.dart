@@ -7,9 +7,6 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ==========================================================
-  // DYNAMIC AUTHORIZATION CHECK
-  // ==========================================================
   Future<bool> isAuthorized(String? email) async {
     if (email == null || email.isEmpty) return false;
 
@@ -17,11 +14,7 @@ class AuthService {
       String cleanEmail = email.trim().toLowerCase();
       String domain = cleanEmail.split('@').last;
       
-      DocumentSnapshot snapshot = await _firestore
-          .collection('app_settings')
-          .doc('access_control')
-          .get();
-
+      DocumentSnapshot snapshot = await _firestore.collection('app_settings').doc('access_control').get();
       List<dynamic> admins = [];
       List<dynamic> allowedDomains = [];
 
@@ -31,21 +24,13 @@ class AuthService {
         allowedDomains = data['allowed_domains'] ?? [];
       }
 
-      // 1. Check Admin
       List<String> cleanAdmins = admins.map((e) => e.toString().toLowerCase().trim()).toList();
       if (cleanAdmins.contains(cleanEmail)) return true;
 
-      // 2. Check Domain
       List<String> cleanDomains = allowedDomains.map((d) => d.toString().toLowerCase().trim()).toList();
       if (cleanDomains.contains(domain)) return true;
 
-      // 3. Check Professor
-      var professorQuery = await _firestore
-          .collection('courses')
-          .where('Professor', arrayContains: cleanEmail)
-          .limit(1)
-          .get();
-
+      var professorQuery = await _firestore.collection('courses').where('Professor', arrayContains: cleanEmail).limit(1).get();
       if (professorQuery.docs.isNotEmpty) return true;
 
       return false;
@@ -54,57 +39,84 @@ class AuthService {
     }
   }
 
-  // ==========================================================
-  // CROSS-PLATFORM GOOGLE SIGN IN (v7.0.0+ Compliant)
-  // ==========================================================
-  Future<User?> signInWithGoogle() async {
+  Future<User?> signInWithGoogle({bool requestCalendarAccess = false}) async {
     try {
       UserCredential userCredential;
+      String? serverAuthCode;
 
       if (kIsWeb) {
         // --- WEB FLOW ---
+        // Note: Flutter Web does not easily expose offline server codes natively.
+        // Sync should be initiated via the Android app.
         final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        if (requestCalendarAccess) {
+          googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
+          googleProvider.setCustomParameters({'prompt': 'consent', 'access_type': 'offline'});
+        }
         userCredential = await _auth.signInWithPopup(googleProvider);
+        
       } else {
         // --- MOBILE FLOW (Android/iOS) ---
         final googleSignIn = GoogleSignIn.instance;
+
+        // THE MAGIC FIX: If asking for Calendar, force Google to forget the session.
+        // This GUARANTEES the consent screen shows up and issues a fresh code.
+        if (requestCalendarAccess) {
+          try { await googleSignIn.disconnect(); } catch (_) {}
+        }
+        
+        List<String> scopes = ['email', 'profile'];
+        if (requestCalendarAccess) scopes.add('https://www.googleapis.com/auth/calendar.events');
+
         await googleSignIn.initialize(
           serverClientId: '699022731941-8dairkag4kun3uitmdc5ebv80k4ab12m.apps.googleusercontent.com',
-        ); // Mandatory in v7+
+        );
 
-        // Step 1: Authentication (Identity)
         final GoogleSignInAccount? googleUser = await googleSignIn.authenticate();
         if (googleUser == null) return null; // User cancelled
 
-        // Step 2: Authorization (Permissions)
-        final List<String> scopes = ['email', 'profile'];
-        final clientAuth = await googleUser.authorizationClient.authorizeScopes(scopes);
+        // Request Server Code
+        if (requestCalendarAccess) {
+          final GoogleSignInServerAuthorization? serverAuth = 
+              await googleUser.authorizationClient.authorizeServer(scopes);
+          serverAuthCode = serverAuth?.serverAuthCode;
 
-        // Step 3: Extract Identity Token
+          // STRICT CHECK: Don't fail silently anymore!
+          if (serverAuthCode == null) {
+            throw Exception("Google refused to provide a sync code. Try clearing app data.");
+          }
+        }
+
+        final clientAuth = await googleUser.authorizationClient.authorizeScopes(scopes);
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-        // Step 4: Create Firebase Credential
         final AuthCredential credential = GoogleAuthProvider.credential(
           accessToken: clientAuth.accessToken,
           idToken: googleAuth.idToken,
         );
 
-        // Step 5: Sign in to Firebase
         userCredential = await _auth.signInWithCredential(credential);
       }
       
       User? user = userCredential.user;
-
       if (user == null || user.email == null) {
         await signOut();
         throw Exception("Login failed: Google did not provide an email address.");
       }
 
       bool authorized = await isAuthorized(user.email);
-
       if (!authorized) {
         await signOut();
         throw Exception("Unauthorized Domain Access"); 
+      }
+
+      // --- Database Write ---
+      if (requestCalendarAccess) {
+        Map<String, dynamic> updateData = {'calendar_sync_enabled': true};
+        if (serverAuthCode != null) {
+          updateData['server_auth_code'] = serverAuthCode;
+        }
+        await _firestore.collection('users').doc(user.email).set(updateData, SetOptions(merge: true));
       }
 
       return user;
@@ -117,7 +129,7 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
     if (!kIsWeb) {
-      await GoogleSignIn.instance.signOut(); // Updated to singleton here too
+      await GoogleSignIn.instance.signOut();
     }
   }
 }

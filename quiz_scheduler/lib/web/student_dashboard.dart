@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../login_page.dart';
 
+// --- NEW: Import AuthService ---
+import '../services/auth_service.dart';
+
 class StudentDashboard extends StatefulWidget {
   final User user;
   final FirebaseFirestore? firestore;
@@ -15,6 +18,73 @@ class StudentDashboard extends StatefulWidget {
 
 class _StudentDashboardState extends State<StudentDashboard> {
   bool _showUpcoming = true;
+
+  // --- NEW: Calendar Sync State ---
+  bool _isCalendarSyncEnabled = false;
+  bool _isSyncingCalendar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSyncPreference();
+  }
+
+  // --- NEW: Fetch initial sync state from Firestore ---
+  Future<void> _loadSyncPreference() async {
+    try {
+      DocumentSnapshot userDoc = await (widget.firestore ?? FirebaseFirestore.instance)
+          .collection('users')
+          .doc(widget.user.email)
+          .get();
+          
+      if (userDoc.exists && userDoc.data() != null) {
+        var data = userDoc.data() as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _isCalendarSyncEnabled = data['calendar_sync_enabled'] ?? false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error loading sync pref: $e");
+    }
+  }
+
+  // --- NEW: Toggle Logic ---
+  Future<void> _toggleCalendarSync(bool enable) async {
+    setState(() => _isSyncingCalendar = true);
+    
+    try {
+      if (enable) {
+        await AuthService().signInWithGoogle(requestCalendarAccess: true);
+        if (mounted) {
+          setState(() => _isCalendarSyncEnabled = true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Google Calendar Sync Enabled!"), backgroundColor: Colors.green)
+          );
+        }
+      } else {
+        await (widget.firestore ?? FirebaseFirestore.instance).collection('users').doc(widget.user.email).set({
+          'calendar_sync_enabled': false,
+        }, SetOptions(merge: true));
+        
+        if (mounted) {
+          setState(() => _isCalendarSyncEnabled = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Google Calendar Sync Disabled."), backgroundColor: Colors.orange)
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Sync failed: ${e.toString().replaceAll('Exception: ', '')}"), backgroundColor: Colors.red)
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncingCalendar = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +139,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     children: [
                       _buildHeaderTitle(isMobile),
                       const SizedBox(height: 16),
-                      _buildToggleContainer(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildToggleContainer(),
+                          _buildSyncToggle(), // Added Sync Toggle for Mobile
+                        ],
+                      ),
                     ],
                   )
                 else
@@ -78,7 +154,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(child: _buildHeaderTitle(isMobile)),
-                      _buildToggleContainer(),
+                      Row(
+                        children: [
+                          _buildSyncToggle(), // Added Sync Toggle for Desktop
+                          const SizedBox(width: 15),
+                          _buildToggleContainer(),
+                        ],
+                      ),
                     ],
                   ),
                   
@@ -203,6 +285,50 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
+  // --- NEW: Sync Toggle UI ---
+  Widget _buildSyncToggle() {
+    return Tooltip(
+      message: "Sync upcoming quizzes to Google Calendar",
+      child: InkWell(
+        onTap: _isSyncingCalendar ? null : () => _toggleCalendarSync(!_isCalendarSyncEnabled),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: _isCalendarSyncEnabled ? Colors.green.shade50 : Colors.white,
+            border: Border.all(color: _isCalendarSyncEnabled ? Colors.green : Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isSyncingCalendar)
+                const Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              else
+                Icon(
+                  Icons.edit_calendar,
+                  color: _isCalendarSyncEnabled ? Colors.green.shade700 : Colors.grey.shade600,
+                  size: 18,
+                ),
+              const SizedBox(width: 8),
+              Text(
+                "G-Cal Sync",
+                style: TextStyle(
+                  color: _isCalendarSyncEnabled ? Colors.green.shade700 : Colors.grey.shade700,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildQuizCard(Map<String, dynamic> data, {required bool isUpcoming, required bool isMobile}) {
     // Current Data
     Timestamp? ts = data['date_&_time'];
@@ -215,7 +341,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
     String courseId = data['course_id'] ?? "---";
     int duration = data['duration'] ?? 60;
 
-    // --- NEW: MODIFICATION UI LOGIC ---
     bool isModified = data['is_modified'] ?? false;
     String? oldTitle = isModified ? data['previous_title'] : null;
     String? oldDate;
@@ -253,7 +378,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Show crossed-out old title if changed
                       if (isModified && oldTitle != null && oldTitle != title)
                         Text(
                           oldTitle, 
@@ -334,7 +458,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
 class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String? oldLabel; // Support for strikethrough labels
+  final String? oldLabel;
 
   const _InfoChip({required this.icon, required this.label, this.oldLabel});
 

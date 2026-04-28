@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 // --- Imports for our new modules ---
 import '../../widgets/faculty_quiz_card.dart';
+import '../../services/auth_service.dart'; // NEW: Added AuthService import
 
 class ViewQuizzesView extends StatefulWidget {
   final User user;
@@ -16,6 +17,73 @@ class ViewQuizzesView extends StatefulWidget {
 class _ViewQuizzesViewState extends State<ViewQuizzesView> {
   bool _showUpcoming = true; 
 
+  // --- NEW: Calendar Sync State ---
+  bool _isCalendarSyncEnabled = false;
+  bool _isSyncingCalendar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSyncPreference();
+  }
+
+  // --- NEW: Fetch initial sync state from Firestore ---
+  Future<void> _loadSyncPreference() async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.email)
+          .get();
+          
+      if (userDoc.exists && userDoc.data() != null) {
+        var data = userDoc.data() as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _isCalendarSyncEnabled = data['calendar_sync_enabled'] ?? false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error loading sync pref: $e");
+    }
+  }
+
+  // --- NEW: Toggle Logic ---
+  Future<void> _toggleCalendarSync(bool enable) async {
+    setState(() => _isSyncingCalendar = true);
+    
+    try {
+      if (enable) {
+        await AuthService().signInWithGoogle(requestCalendarAccess: true);
+        if (mounted) {
+          setState(() => _isCalendarSyncEnabled = true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Google Calendar Sync Enabled!"), backgroundColor: Colors.green)
+          );
+        }
+      } else {
+        await FirebaseFirestore.instance.collection('users').doc(widget.user.email).set({
+          'calendar_sync_enabled': false,
+        }, SetOptions(merge: true));
+        
+        if (mounted) {
+          setState(() => _isCalendarSyncEnabled = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Google Calendar Sync Disabled."), backgroundColor: Colors.orange)
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Sync failed: ${e.toString().replaceAll('Exception: ', '')}"), backgroundColor: Colors.red)
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncingCalendar = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isMobile = MediaQuery.of(context).size.width < 768;
@@ -25,14 +93,20 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- HEADER & TOGGLE ---
+          // --- HEADER & TOGGLES ---
           if (isMobile)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeaderTitle(isMobile),
                 const SizedBox(height: 16),
-                _buildToggleContainer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildToggleContainer(),
+                    _buildSyncToggle(), // NEW: Mobile Sync Toggle
+                  ],
+                ),
               ],
             )
           else
@@ -41,7 +115,13 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildHeaderTitle(isMobile),
-                _buildToggleContainer(),
+                Row(
+                  children: [
+                    _buildSyncToggle(), // NEW: Desktop Sync Toggle
+                    const SizedBox(width: 15),
+                    _buildToggleContainer(),
+                  ],
+                ),
               ],
             ),
             
@@ -166,6 +246,50 @@ class _ViewQuizzesViewState extends State<ViewQuizzesView> {
             color: isSelected ? Colors.white : Colors.grey.shade700,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 14 
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- NEW: Sync Toggle UI ---
+  Widget _buildSyncToggle() {
+    return Tooltip(
+      message: "Sync scheduled quizzes to your Google Calendar",
+      child: InkWell(
+        onTap: _isSyncingCalendar ? null : () => _toggleCalendarSync(!_isCalendarSyncEnabled),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: _isCalendarSyncEnabled ? Colors.green.shade50 : Colors.white,
+            border: Border.all(color: _isCalendarSyncEnabled ? Colors.green : Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isSyncingCalendar)
+                const Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              else
+                Icon(
+                  Icons.edit_calendar,
+                  color: _isCalendarSyncEnabled ? Colors.green.shade700 : Colors.grey.shade600,
+                  size: 18,
+                ),
+              const SizedBox(width: 8),
+              Text(
+                "G-Cal Sync",
+                style: TextStyle(
+                  color: _isCalendarSyncEnabled ? Colors.green.shade700 : Colors.grey.shade700,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
         ),
       ),
