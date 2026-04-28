@@ -15,10 +15,9 @@
 3. [Access & Installation](#3-access--installation)
 4. [App Overview](#4-app-overview)
 5. [Faculty Guide: Scheduling a Quiz](#5-faculty-guide-scheduling-a-quiz)
-6. [Faculty Guide: Importing Student Lists](#6-faculty-guide-importing-student-lists)
-7. [Student Guide: Managing Your Schedule (BITS Goa Evals)](#7-student-guide-managing-your-schedule-bits-goa-evals)
-8. [Notifications & Calendar Sync](#8-notifications--calendar-sync)
-9. [Tips & FAQ](#9-tips--faq)
+6. [Student Guide: Managing Your Schedule (BITS Goa Evals)](#7-student-guide-managing-your-schedule-bits-goa-evals)
+7. [Notifications & Calendar Sync](#8-notifications--calendar-sync)
+8. [Tips & FAQ](#9-tips--faq)
 
 ---
 
@@ -127,17 +126,8 @@ Navigate to **My Quizzes**, click on the existing quiz, and edit the details. On
 
 ---
 
-## 6. Faculty Guide: Importing Student Lists
 
-To ensure the heatmap accurately reflects your specific class, you must upload your enrollment data.
-
-1. **Download from ERP:** Log into Quanta and download your course's student registration list (CSV).
-2. **Navigate to Students:** On the dashboard, go to the **Students/Enrollment** section.
-3. **Upload & Sync:** Click **Import from ERP/CSV**, upload the file, and click **Confirm Import**.
-
----
-
-## 7. Student Guide: Managing Your Schedule (BITS Goa Evals)
+## 6. Student Guide: Managing Your Schedule (BITS Goa Evals)
 
 
 The mobile app organizes your academic life into three simple tabs located at the bottom of the screen:
@@ -149,7 +139,7 @@ The mobile app organizes your academic life into three simple tabs located at th
 
 ---
 
-## 8. Notifications & Calendar Sync
+## 7. Notifications & Calendar Sync
 
 
 ### Notification Preferences
@@ -166,7 +156,7 @@ To see your quizzes alongside your personal events:
 
 ---
 
-## 9. Tips & FAQ
+## 8. Tips & FAQ
 🎓 For Students (BITS Goa Evals App)
 Q: I’m a student and my "Courses" tab is missing a subject. Why?
 
