@@ -51,6 +51,53 @@ Security and privacy are top priorities. You **must** use your BITS Goa Google a
 
 ## 3. Access & Installation
 
+## System Requirements
+
+## 💻 Web Dashboard Requirements
+
+| Component | Minimum Requirement |
+|---|---|
+| Browser | Chrome, Edge, Firefox, Safari (latest 2 versions) |
+| Screen Size | 1280×720 or higher recommended |
+| RAM | 4 GB |
+| Internet | Stable broadband / campus Wi-Fi |
+
+---
+
+## 🤖 Android Requirements
+
+| Component | Minimum Requirement |
+|---|---|
+| OS Version | Android 8.0 (Oreo) or later |
+| RAM | 3 GB recommended |
+| Storage | 150 MB free space |
+| Notifications | Enabled |
+
+### Recommended Devices
+- Samsung Galaxy A / M Series
+- OnePlus Nord Series
+- Xiaomi Redmi Note Series
+- Realme Narzo / Number Series
+
+---
+
+## 🍎 iOS Requirements
+
+| Component | Minimum Requirement |
+|---|---|
+| OS Version | iOS 14 or later |
+| Device | iPhone 8 or newer recommended |
+| Storage | 150 MB free space |
+| Notifications | Enabled |
+| Apple ID | Required for App Store install |
+
+### Recommended Devices
+- iPhone 11 or later
+- iPhone SE (2nd Gen+)
+- iPhone 12 / 13 / 14 / 15 Series
+
+---
+
 ### For Faculty and Students (Web Dashboard)
 You do not need to download anything.
 1. Open your browser and navigate to the Quiz Scheduler portal.
