@@ -141,7 +141,7 @@ Acceptance Criteria:
 
 ### Story 2 (High): Dashboard Visualization
 
-As a professor, I want to see a calendar view of my students' existing quizzes so that I can identify free slots.
+As a Professor,  I want to see a calendar view of my students' existing quizzes so that I can identify free slots.
 
 Acceptance Criteria:  
 
