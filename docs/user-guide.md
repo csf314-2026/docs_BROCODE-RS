@@ -115,37 +115,13 @@ You do not need to download anything.
 ## 4. App Overview
 
 ### Faculty Web Dashboard Layout
-
-```text
-┌──────────────────────────────────────────────────────────┐
-│  BITS Goa | Quiz Scheduler            [👤 Prof. ▾] [Logout]│
-├──────────────┬───────────────────────────────────────────┤
-│ 📅 Schedule  │                                           │
-│    Quiz      │          [ Calendar Heatmap ]             │
-│ 📋 My        │                                           │
-│    Quizzes   │       [ 1-Hour Free Slots List ]          │
-│              │                                           │
-│              │        [ Confirm & Schedule ]             │
-└──────────────┴───────────────────────────────────────────┘
-```
+![alt text](image.png)
 
 ### Student Mobile App Layout (BITS Goa Evals)
+<p align="center">
+  <img src="image-1.png" width="250">
+</p>
 
-```text
-┌──────────────────────────────────────┐
-│  BITS Goa Evals             [P] [➔]  │
-├──────────────────────────────────────┤
-│  My Schedule                         │
-│  [ Upcoming ] [ Past ]               │
-│                                      │
-│  [📖 Computer Programming: Quiz 1] ⏰│ 
-│  📅 Wed, Apr 29, 2026  🕒 7:00 AM    │
-│  ⏱️ 60 mins                          │
-├──────────────────────────────────────┤
-│  [📅 Schedule] [📚 Courses] [⚙️ Settings] │
-└──────────────────────────────────────┘
-```
-*(Alarm icon shown as ⏰ in the UI mockup)*
 
 ---
 
