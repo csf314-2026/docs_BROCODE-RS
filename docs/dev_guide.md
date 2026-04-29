@@ -23,6 +23,29 @@ This project is built using **Flutter** for the cross-platform frontend and **Fi
 
 ---
 
+## Pricing & Limitations (Spark vs. Blaze)
+
+The project utilizes specific Firebase features that determine the required plan and daily usage limits.
+
+### Firebase Spark Plan (Free Tier)
+This plan is sufficient for small-scale testing but has strict limits:
+*   **Firestore Reads:** 50,000 per day.
+*   **Firestore Writes:** 20,000 per day.
+*   **Firestore Deletes:** 20,000 per day.
+*   **Storage:** 1 GiB total stored data.
+*   **Cloud Functions:** **NOT included.** The Spark plan does not support the Node.js 10+ runtime required for this project's backend.
+
+### Firebase Blaze Plan (Pay-as-you-go)
+This project **requires the Blaze Plan** to run Cloud Functions and Scheduled Tasks (Cron jobs)[cite: 2].
+
+**Threshold for Free Usage on Blaze:**
+The free quotas from the Spark plan still apply to Blaze. You only pay for usage *after* you exceed these thresholds.
+*   **Cloud Functions:** First 2 million invocations per month are free.
+*   **Cloud Scheduler:** First 3 scheduled jobs per project are free[cite: 2].
+*   **FCM (Push Notifications):** Unlimited free sends.
+*   **Requirement:** A credit card is required to enable Blaze, but with dummy data and low user volume, the cost is typically **$0.00** as long as you stay within the daily thresholds.
+
+
 ## 🚀 Setting Up the Project (From Scratch)
 
 This section covers how to initialize the project after cloning the repository from GitHub. The production database contains dummy data for testing purposes. **You do NOT need to migrate or import any existing database records.** You should set up a completely fresh Firebase environment.
