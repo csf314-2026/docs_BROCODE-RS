@@ -18,7 +18,7 @@ This project is built using **Flutter** for the cross-platform frontend and **Fi
 
 ### Core Design Principles
 1.  **Event-Driven Backend:** Almost all backend logic is triggered by Firestore database events (`onDocumentWritten`, `onDocumentCreated`, etc.). The frontend rarely calls functions directly; it just reads/writes to Firestore, and the backend reacts.
-2.  **Bulletproof Sync Loop:** The Calendar Sync engine is designed to handle API failures gracefully. If one user's Google token expires (`invalid_grant`), the loop catches the error, disables sync for that specific user, and continues processing the rest of the class.
+2.  **Sync Loop:** The Calendar Sync engine is designed to handle API failures gracefully. If one user's Google token expires (`invalid_grant`), the loop catches the error, disables sync for that specific user, and continues processing the rest of the class.
 3.  **Domino-Effect Prevention:** The backend modifies quiz documents to save generated Google Calendar Event IDs. To prevent this silent backend update from triggering "Quiz Updated!" push notifications to students, the notification engine explicitly filters out updates where only the `calendar_event_ids` field changed.
 
 ---
